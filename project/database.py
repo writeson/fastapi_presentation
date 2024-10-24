@@ -8,15 +8,22 @@ from contextlib import asynccontextmanager
 
 
 DB_PATH = Path(__file__).parent / "db" / "chinook.db"
-POOL_SIZE = 5
 
 class DatabasePool:
+    """
+    This class creates a database pool the system can use
+    to re-use database connections, rather than re-connecting
+    for every request. This improves database access
+    performance.
+    """
+    POOL_SIZE = 5
+    
     def __init__(self):
         self.pool = asyncio.Queue()
         self.size = 0
 
     async def init(self):
-        for _ in range(POOL_SIZE):
+        for _ in range(DatabasePool:POOL_SIZE):
             db = await aiosqlite.connect(DB_PATH)
             await self.pool.put(db)
             self.size += 1
