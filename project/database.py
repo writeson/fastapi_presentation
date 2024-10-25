@@ -3,11 +3,13 @@ from pathlib import Path
 from fastapi import FastAPI
 import aiosqlite
 import asyncio
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Sized
 from contextlib import asynccontextmanager
 
 
 DB_PATH = Path(__file__).parent / "db" / "chinook.db"
+POOL_SIZE = 5
+
 
 class DatabasePool:
     """
@@ -16,14 +18,13 @@ class DatabasePool:
     for every request. This improves database access
     performance.
     """
-    POOL_SIZE = 5
     
-    def __init__(self):
+    def __init__(self, size: int = POOL_SIZE):
         self.pool = asyncio.Queue()
-        self.size = 0
+        self.size = size
 
     async def init(self):
-        for _ in range(DatabasePool:POOL_SIZE):
+        for _ in range(self.size):
             db = await aiosqlite.connect(DB_PATH)
             await self.pool.put(db)
             self.size += 1
@@ -39,10 +40,16 @@ class DatabasePool:
             conn = await self.pool.get()
             await conn.close()
 
-db_pool = DatabasePool()
+
+db_pool = DatabasePool(size=POOL_SIZE)
+
 
 @asynccontextmanager
 async def get_db() -> AsyncGenerator[aiosqlite.Connection, None]:
+    """
+    An asyncio friendly function to get a connection
+    from the database connection pool
+    """
     conn = await db_pool.acquire()
     try:
         yield conn
