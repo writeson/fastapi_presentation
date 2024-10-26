@@ -5,19 +5,19 @@ from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import Index, Integer, Numeric
 
 
-class Artists(SQLModel, table=True):
-    __tablename__ = "artists"
-
-    artist_id: Optional[int] = Field(default=None, primary_key=True)
-    name: Optional[str] = Field(default=None, max_length=120)
-
-    albums: List["Albums"] = Relationship(back_populates="artist")
-
-    class Config:
-        sa_column_kwargs = {
-            "artist_id": {"name": "ArtistId"},
-            "name": {"name": "Name"}
-        }
+# class Artists(SQLModel, table=True):
+#     __tablename__ = "artists"
+# 
+#     artist_id: Optional[int] = Field(default=None, primary_key=True)
+#     name: Optional[str] = Field(default=None, max_length=120)
+# 
+#     albums: List["Albums"] = Relationship(back_populates="artist")
+# 
+#     class Config:
+#         sa_column_kwargs = {
+#             "artist_id": {"name": "ArtistId"},
+#             "name": {"name": "Name"}
+#         }
 
 
 class Employees(SQLModel, table=True):
