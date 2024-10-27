@@ -7,7 +7,7 @@ from project.app.models.artists import (
 from project.app.database import  get_db
 from project.app.endpoints.artists import crud as artist_crud
 
-from fastapi import APIRouter, Depends, Path, Request, Response, status
+from fastapi import APIRouter, Depends, Path, Request, Response, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(
@@ -18,51 +18,47 @@ router = APIRouter(
 )
 
 
-@router.post("/artists/", response_model=ArtistRead, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=ArtistRead, status_code=status.HTTP_201_CREATED)
 async def create_artist(artist: ArtistCreate, db: AsyncSession = Depends(get_db)):
     async with db as session:
         return await artist_crud.create_artist(session=session, artist=artist)
-    
-    
-    # with Session(engine) as session:
-    #     db_artist = ArtistCreate(name=artist.name)
-    #     session.add(db_artist)
-    #     session.commit()
-    #     session.refresh(db_artist)
-    #     return db_artist
 
-# @router.get("/artists/{artist_id}", response_model=ArtistRead)
-# def read_artist(artist_id: int):
-#     with Session(engine) as session:
-#         artist = session.get(ArtistsRead, artist_id)
-#         if not artist:
-#             raise HTTPException(status_code=404, detail="Artist not found")
-#         return artist
-# 
-# @router.put("/artists/{artist_id}", response_model=ArtistRead)
-# def update_artist(artist_id: int, artist: ArtistUpdate):
-#     with Session(engine) as session:
-#         db_artist = session.get(ArtistsBase, artist_id)
-#         if not db_artist:
-#             raise HTTPException(status_code=404, detail="Artist not found")
-#         artist_data = artist.dict()
-#         for key, value in artist_data.items():
-#             setattr(db_artist, key, value)
-#         session.add(db_artist)
-#         session.commit()
-#         session.refresh(db_artist)
-#         return db_artist
-# 
-# @router.patch("/artists/{artist_id}", response_model=ArtistRead)
-# def patch_artist(artist_id: int, artist: ArtistPatch):
-#     with Session(engine) as session:
-#         db_artist = session.get(ArtistsBase, artist_id)
-#         if not db_artist:
-#             raise HTTPException(status_code=404, detail="Artist not found")
-#         artist_data = artist.dict(exclude_unset=True)
-#         for key, value in artist_data.items():
-#             setattr(db_artist, key, value)
-#         session.add(db_artist)
-#         session.commit()
-#         session.refresh(db_artist)
-#         return db_artist
+
+@router.get("/", response_model=list[ArtistRead])
+async def read_artists(offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)):
+    async with db as session:
+        return await artist_crud.read_artists(session=session, offset=offset, limit=limit)
+
+
+@router.get("/{id}", response_model=ArtistRead)
+async def read_artist(id: int = Path(..., title="The ID of the artist to get"), db: AsyncSession = Depends(get_db)):
+    async with db as session:
+        db_artist = await artist_crud.read_artist(session=session, id=id)
+        if db_artist is None:
+            raise HTTPException(status_code=404, detail="Artist not found")
+        return db_artist
+
+
+@router.put("/{id}", response_model=ArtistRead)
+async def update_artist(
+    artist: ArtistUpdate,
+    id: int = Path(..., title="The ID of the artist to update"),
+    db: AsyncSession = Depends(get_db)
+):
+    async with db as session:
+        db_artist = await artist_crud.update_artist(session=session, id=id, artist=artist)
+        if db_artist is None:
+            raise HTTPException(status_code=404, detail="Artist not found")
+        return db_artist
+
+@router.patch("/{id}", response_model=ArtistRead)
+async def patch_artist(
+    artist: ArtistPatch,
+    id: int = Path(..., title="The ID of the artist to patch"),
+    db: AsyncSession = Depends(get_db)
+):
+    async with db as session:
+        db_artist = await artist_crud.patch_artist(session=session, id=id, artist=artist)
+        if db_artist is None:
+            raise HTTPException(status_code=404, detail="Artist not found")
+        return db_artist

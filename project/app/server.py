@@ -1,12 +1,10 @@
 
-import json
 import logging
-from pathlib import Path
-from typing import Any
 from contextlib import asynccontextmanager
 
 from database import init_db
 from endpoints.artists.routes import router as artists_router
+from endpoints.albums.routes import router as albums_router
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -20,23 +18,6 @@ logger = get_logger(__name__)
 
 class TagsMetaDataFileNotFound(Exception):
     """Exception raised when the tags metadata file is not found"""
-
-
-def get_tags_metadata(filepath: str) -> list[dict[str, Any]]:
-    """
-    Get the tags metadata from a file and
-    return it in the format expected by the FastAPI
-    constructor.
-
-    :return: List[Dict[str, Any]] tags metadata
-    """
-    try:
-        return json.load(Path(filepath).open(mode="r", encoding="utf-8"))
-    except FileNotFoundError as ex:
-        raise TagsMetaDataFileNotFound(f"Tags metadata file {filepath} not found") from ex
-
-# app = FastAPI()
-# register_fastapi_events(app=app)
 
 
 @asynccontextmanager
@@ -64,7 +45,7 @@ def app_factory():
         title="Recurring Payment API",
         description=__doc__,
         version="0.1.0",
-        openapi_tags=get_tags_metadata(Path(__file__).parent / "./tags_metadata.json"),
+        openapi_url="/openapi.json",
         lifespan=lifespan,
         debug=True,
     )
@@ -79,14 +60,7 @@ def app_factory():
     )
     # add all the endpoint routers
     fastapi_app.include_router(artists_router, prefix="/api/v1")
-    # fastapi_app.include_router(v1_users_router, prefix="/api/v1")
-    # fastapi_app.include_router(v1_gateways_router, prefix="/api/v1")
-    # fastapi_app.include_router(v1_external_apis_router, prefix="/api/v1")
-    # fastapi_app.include_router(v1_schedules_router, prefix="/api/v1")
-    # fastapi_app.include_router(v1_services_router, prefix="/api/v1")
-    # fastapi_app.include_router(v1_payment_plans_router, prefix="/api/v1")
-    # fastapi_app.include_router(v1_merchant_groups_router, prefix="/api/v1")
-    # fastapi_app.include_router(v1_merchants_router, prefix="/api/v1")
+    fastapi_app.include_router(albums_router, prefix="/api/v1")
 
     configure_logging(
         logging_level=logging.DEBUG
