@@ -1,14 +1,18 @@
+from __future__ import annotations
+
 from typing import Optional
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer
 from sqlmodel import SQLModel, Field, Relationship
 
-from project.app.models.albums import Album
+from .albums import Album
+
 
 class ArtistBase(SQLModel):
     name: str = Field(
         default=None, 
         description="The name of the artist",
         title="Artist Name",
+        min_length=0,
         max_length=120,
     ) 
     
@@ -23,12 +27,13 @@ class Artist(ArtistBase, table=True):
     )
     name: str = Field(sa_column=Column("Name"))
 
-    albums: list[Album] = Relationship(back_populates="artist")
+    albums: list["Album"] = Relationship(back_populates="artist")
 
 
 # Create operation
 class ArtistCreate(ArtistBase):
     pass
+
 
 # Read operation
 class ArtistRead(ArtistBase):
@@ -37,10 +42,23 @@ class ArtistRead(ArtistBase):
     class Config:
         from_attributes = True
 
+
+class ArtistReadWithAlbums(ArtistBase):
+    id: int
+    albums: list["Album"] = []
+
+    class Config:
+        from_attributes = True
+
+
 # Update operation (Put)
 class ArtistUpdate(ArtistBase):
     name: str | None = Field(default=None)
 
+
 # Patch operation
 class ArtistPatch(ArtistBase):
     name: Optional[str] = Field(default=None)
+    
+    
+Artist.update_forward_refs(Album=Album)    

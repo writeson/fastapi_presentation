@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from database import init_db
 from endpoints.artists.routes import router as artists_router
 from endpoints.albums.routes import router as albums_router
+from endpoints.tracks.routes import router as tracks_router
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -61,6 +62,7 @@ def app_factory():
     # add all the endpoint routers
     fastapi_app.include_router(artists_router, prefix="/api/v1")
     fastapi_app.include_router(albums_router, prefix="/api/v1")
+    fastapi_app.include_router(tracks_router, prefix="/api/v1")
 
     configure_logging(
         logging_level=logging.DEBUG

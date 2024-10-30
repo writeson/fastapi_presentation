@@ -2,11 +2,13 @@ from project.app.models.artists import (
     Artist,
     ArtistCreate,
     ArtistRead,
+    ArtistReadWithAlbums,
     ArtistUpdate,
     ArtistPatch,
 )
 
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -31,6 +33,21 @@ async def read_artist(session: AsyncSession, id: int) -> ArtistRead | None:
     result = await session.execute(query)
     db_artist = result.scalar_one_or_none()
     return db_artist
+
+async def read_artist_with_albums(session: AsyncSession, id: int) -> ArtistReadWithAlbums:
+    """
+    Retrieve all Artists from the database.
+    Returns a list of ArtistRead models.
+    """
+    query = (
+        select(Artist)
+        .options(selectinload(Artist.albums))
+        .where(Artist.id == id)
+    )
+    result = await session.execute(query)
+    db_artist = result.scalar_one_or_none()
+    return db_artist
+
 
 async def read_artists(session: AsyncSession, offset: int=0, limit: int=10) -> list[ArtistRead]:
     """

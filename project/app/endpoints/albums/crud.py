@@ -2,11 +2,13 @@ from project.app.models.albums import (
     Album,
     AlbumCreate,
     AlbumRead,
+    AlbumReadWithTracks,
     AlbumUpdate,
     AlbumPatch,
 )
 
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -31,6 +33,21 @@ async def read_album(session: AsyncSession, id: int) -> AlbumRead | None:
     result = await session.execute(query)
     db_album = result.scalar_one_or_none()
     return db_album
+
+async def read_album_with_tracks(session: AsyncSession, id: int) -> AlbumReadWithTracks:
+    """
+    Retrieve an Album from the database with associated tracks
+    Returns an album with a list of associated tracks
+    """
+    query = (
+        select(Album)
+        .options(selectinload(Album.tracks))
+        .where(Album.id == id)
+    )
+    result = await session.execute(query)
+    db_artist = result.scalar_one_or_none()
+    return db_artist
+
 
 async def read_albums(session: AsyncSession, offset: int=0, limit: int=10) -> list[AlbumRead]:
     """

@@ -1,13 +1,14 @@
 from project.app.models.artists import (
     ArtistCreate,
     ArtistRead,
+    ArtistReadWithAlbums,
     ArtistUpdate,
     ArtistPatch,
 )
 from project.app.database import  get_db
 from project.app.endpoints.artists import crud as artist_crud
 
-from fastapi import APIRouter, Depends, Path, Request, Response, status, HTTPException
+from fastapi import APIRouter, Depends, Path, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(
@@ -34,6 +35,15 @@ async def read_artists(offset: int = 0, limit: int = 10, db: AsyncSession = Depe
 async def read_artist(id: int = Path(..., title="The ID of the artist to get"), db: AsyncSession = Depends(get_db)):
     async with db as session:
         db_artist = await artist_crud.read_artist(session=session, id=id)
+        if db_artist is None:
+            raise HTTPException(status_code=404, detail="Artist not found")
+        return db_artist
+
+
+@router.get("/{id}/albums", response_model=ArtistReadWithAlbums)
+async def read_artist_with_albums(id: int = Path(..., title="The ID of the artist to get"), db: AsyncSession = Depends(get_db)):
+    async with db as session:
+        db_artist = await artist_crud.read_artist_with_albums(session=session, id=id)
         if db_artist is None:
             raise HTTPException(status_code=404, detail="Artist not found")
         return db_artist

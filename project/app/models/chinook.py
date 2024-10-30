@@ -113,24 +113,24 @@ class Playlists(SQLModel, table=True):
             "name": {"name": "Name"}
         }
 
-class Albums(SQLModel, table=True):
-    __tablename__ = "albums"
-
-    album_id: Optional[int] = Field(default=None, primary_key=True)
-    title: str = Field(max_length=160)
-    artist_id: int = Field(foreign_key="artists.ArtistId")
-
-
-    class Config:
-        sa_column_kwargs = {
-            "album_id": {"name": "AlbumId"},
-            "title": {"name": "Title"},
-            "artist_id": {"name": "ArtistId"}
-        }
-
-    __table_args__ = (
-        Index("IFK_AlbumArtistId", "ArtistId"),
-    )
+# class Albums(SQLModel, table=True):
+#     __tablename__ = "albums"
+# 
+#     album_id: Optional[int] = Field(default=None, primary_key=True)
+#     title: str = Field(max_length=160)
+#     artist_id: int = Field(foreign_key="artists.ArtistId")
+# 
+# 
+#     class Config:
+#         sa_column_kwargs = {
+#             "album_id": {"name": "AlbumId"},
+#             "title": {"name": "Title"},
+#             "artist_id": {"name": "ArtistId"}
+#         }
+# 
+#     __table_args__ = (
+#         Index("IFK_AlbumArtistId", "ArtistId"),
+#     )
 
 class Customers(SQLModel, table=True):
     __tablename__ = "customers"
