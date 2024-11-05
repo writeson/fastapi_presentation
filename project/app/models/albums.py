@@ -1,11 +1,9 @@
-from __future__ import annotations
-
-from typing import Optional
+from typing import Optional, Annotated
 from sqlalchemy import Column, Integer, Index, ForeignKey
 from sqlmodel import SQLModel, Field, Relationship
 
-# from .artists import Artist
-from .tracks import Track
+from .artists import Artist, ArtistRead
+
 
 class AlbumBase(SQLModel):
     title: str = Field(
@@ -36,6 +34,10 @@ class Album(AlbumBase, table=True):
     # Define the relationship to Tracks
     tracks: list["Track"] = Relationship(back_populates="album")
 
+    model_config = {
+        "from_attributes": True
+    }
+    
     __table_args__ = (
         Index("IFK_AlbumArtistId", "ArtistId"),
     )
@@ -50,16 +52,18 @@ class AlbumCreate(AlbumBase):
 class AlbumRead(AlbumBase):
     id: int
 
-    class Config:
-        from_attributes = True
+    model_config = {
+        "from_attributes": True
+    }
 
 
 class AlbumReadWithTracks(AlbumBase):
     id: int
     tracks: list["Track"] = []
 
-    class Config:
-        from_attributes = True
+    model_config = {
+        "from_attributes": True
+    }
         
         
 # Update operation (Put)
@@ -70,7 +74,3 @@ class AlbumUpdate(AlbumBase):
 # Patch operation
 class AlbumPatch(AlbumBase):
     title: Optional[str] = Field(default=None)
-
-
-#Album.update_forward_refs(Artist=Artist)
-Album.update_forward_refs(Track=Track)

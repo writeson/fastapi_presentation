@@ -1,6 +1,4 @@
-from __future__ import annotations
-
-from typing import Optional
+from typing import Optional, Annotated
 from sqlalchemy import Column, Integer, Numeric, String, Index, ForeignKey
 from sqlmodel import SQLModel, Field, Relationship
 from decimal import Decimal
@@ -89,6 +87,3 @@ class TrackUpdate(TrackBase):
 # Patch operation
 class TrackPatch(TrackBase):
     name: Optional[str] = Field(default=None)
-
-
-Track.update_forward_refs(Album="Album")    
