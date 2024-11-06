@@ -1,6 +1,7 @@
-from typing import Optional, Annotated
+from typing import Optional, Annotated, List
 from sqlalchemy import Column, Integer
 from sqlmodel import SQLModel, Field, Relationship
+from pydantic import ConfigDict
 
 
 class ArtistBase(SQLModel):
@@ -23,11 +24,9 @@ class Artist(ArtistBase, table=True):
     )
     name: str = Field(sa_column=Column("Name"))
 
-    albums: list["Album"] = Relationship(back_populates="artist")
+    albums: List["Album"] = Relationship(back_populates="artist")
     
-    model_config = {
-        "from_attributes": True
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Create operation
@@ -38,19 +37,18 @@ class ArtistCreate(ArtistBase):
 # Read operation
 class ArtistRead(ArtistBase):
     id: int
-    
-    model_config = {
-        "from_attributes": True
-    }
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ArtistReadWithAlbums(ArtistBase):
     id: int
-    albums: list["Album"] = []
+    albums: List["Album"] = []
 
-    model_config = {
-        "from_attributes": True
-    }
+    model_config = ConfigDict(
+        from_attributes=True,
+        populate_by_name=True,
+    )
 
 
 # Update operation (Put)
@@ -61,3 +59,6 @@ class ArtistUpdate(ArtistBase):
 # Patch operation
 class ArtistPatch(ArtistBase):
     name: Optional[str] = Field(default=None)
+
+
+from .albums import Album
