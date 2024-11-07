@@ -7,6 +7,7 @@ from project.app.models.tracks import (
 )
 
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -24,12 +25,19 @@ async def create_track(session: AsyncSession, album: TrackCreate):
 
 async def read_track(session: AsyncSession, id: int) -> TrackRead | None:
     """
-    Retrieve an Track from the database by ID.
+    Retrieve a Track from the database by ID.
     Returns the TrackRead model if found, None otherwise.
     """
-    query = select(Track).where(Track.id == id)
+    query = (
+        select(Track)
+        .options(joinedload(Track.genre))
+        .options(joinedload(Track.media_type))
+        .where(Track.id == id)
+    )
     result = await session.execute(query)
-    db_track = result.scalar_one_or_none()
+    db_track = result.unique().scalar_one_or_none()
+    if db_track is None:
+        return None
     return db_track
 
 async def read_tracks(session: AsyncSession, offset: int=0, limit: int=10) -> list[TrackRead]:

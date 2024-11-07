@@ -69,34 +69,34 @@ class Employees(SQLModel, table=True):
     )
 
 
-class Genres(SQLModel, table=True):
-    __tablename__ = "genres"
+# class Genres(SQLModel, table=True):
+#     __tablename__ = "genres"
+# 
+#     genre_id: Optional[int] = Field(default=None, primary_key=True)
+#     name: Optional[str] = Field(default=None, max_length=120)
+# 
+#     tracks: List["Tracks"] = Relationship(back_populates="genre")
+# 
+#     class Config:
+#         sa_column_kwargs = {
+#             "genre_id": {"name": "GenreId"},
+#             "name": {"name": "Name"}
+#         }
 
-    genre_id: Optional[int] = Field(default=None, primary_key=True)
-    name: Optional[str] = Field(default=None, max_length=120)
 
-    tracks: List["Tracks"] = Relationship(back_populates="genre")
-
-    class Config:
-        sa_column_kwargs = {
-            "genre_id": {"name": "GenreId"},
-            "name": {"name": "Name"}
-        }
-
-
-class MediaTypes(SQLModel, table=True):
-    __tablename__ = "media_types"
-
-    media_type_id: Optional[int] = Field(default=None, primary_key=True)
-    name: Optional[str] = Field(default=None, max_length=120)
-
-    tracks: List["Tracks"] = Relationship(back_populates="media_type")
-
-    class Config:
-        sa_column_kwargs = {
-            "media_type_id": {"name": "MediaTypeId"},
-            "name": {"name": "Name"}
-        }
+# class MediaTypes(SQLModel, table=True):
+#     __tablename__ = "media_types"
+# 
+#     media_type_id: Optional[int] = Field(default=None, primary_key=True)
+#     name: Optional[str] = Field(default=None, max_length=120)
+# 
+#     tracks: List["Tracks"] = Relationship(back_populates="media_type")
+# 
+#     class Config:
+#         sa_column_kwargs = {
+#             "media_type_id": {"name": "MediaTypeId"},
+#             "name": {"name": "Name"}
+#         }
 
 
 class Playlists(SQLModel, table=True):

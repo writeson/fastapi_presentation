@@ -8,7 +8,7 @@ from project.app.models.artists import (
 )
 
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -34,19 +34,20 @@ async def read_artist(session: AsyncSession, id: int) -> ArtistRead | None:
     db_artist = result.scalar_one_or_none()
     return db_artist
 
-async def read_artist_with_albums(session: AsyncSession, id: int) -> ArtistReadWithAlbums:
+async def read_artist_with_albums(session: AsyncSession, id: int) -> ArtistReadWithAlbums | None:
     """
-    Retrieve all Artists from the database.
-    Returns a list of ArtistRead models.
-    """
+    Retrieve an Artist with its albums from the database.
+    Returns an ArtistReadWithAlbums model.    """
     query = (
         select(Artist)
-        .options(selectinload(Artist.albums))
+        .options(joinedload(Artist.albums))
         .where(Artist.id == id)
     )
     result = await session.execute(query)
-    db_artist = result.scalar_one_or_none()
-    return db_artist
+    db_artist = result.unique().scalar_one_or_none()
+    if db_artist is None:
+        return None
+    return ArtistReadWithAlbums.model_validate(db_artist)
 
 
 async def read_artists(session: AsyncSession, offset: int=0, limit: int=10) -> list[ArtistRead]:

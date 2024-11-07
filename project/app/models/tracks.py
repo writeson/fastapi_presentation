@@ -3,7 +3,6 @@ from sqlalchemy import Column, Integer, Numeric, String, Index, ForeignKey
 from sqlmodel import SQLModel, Field, Relationship
 from decimal import Decimal
 
-#from .albums import Album
 
 class TrackBase(SQLModel):
     name: str = Field(
@@ -55,8 +54,8 @@ class Track(TrackBase, table=True):
 
     # playlists: List["Playlists"] = Relationship(back_populates="tracks")
     album: Optional["Album"] = Relationship(back_populates="tracks")
-    # genre: Optional["Genres"] = Relationship(back_populates="tracks")
-    # media_type: Optional["MediaTypes"] = Relationship(back_populates="tracks")
+    genre: Optional["Genre"] = Relationship(back_populates="tracks")
+    media_type: Optional["MediaType"] = Relationship(back_populates="tracks")
     # invoice_items: List["InvoiceItems"] = Relationship(back_populates="tracks")
 
     __table_args__ = (
@@ -87,3 +86,7 @@ class TrackUpdate(TrackBase):
 # Patch operation
 class TrackPatch(TrackBase):
     name: Optional[str] = Field(default=None)
+
+
+from .genres import Genre
+from .media_types import MediaType
