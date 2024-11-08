@@ -1,3 +1,8 @@
+from fastapi import APIRouter, Depends, Path, status, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from project.app.database import get_db
+from project.app.endpoints.artists import crud as artist_crud
 from project.app.models.artists import (
     ArtistCreate,
     ArtistRead,
@@ -5,11 +10,7 @@ from project.app.models.artists import (
     ArtistUpdate,
     ArtistPatch,
 )
-from project.app.database import get_db
-from project.app.endpoints.artists import crud as artist_crud
 
-from fastapi import APIRouter, Depends, Path, status, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(
     prefix="/artists",

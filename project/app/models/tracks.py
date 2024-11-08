@@ -1,9 +1,10 @@
-from typing import Optional
+from typing import Optional, List
 from sqlalchemy import Column, Integer, Numeric, String, Index, ForeignKey
 from sqlmodel import SQLModel, Field, Relationship
 from decimal import Decimal
 from pydantic import ConfigDict
 
+from .playlist_track import PlaylistTrack
 
 class TrackBase(SQLModel):
     name: str = Field(
@@ -85,7 +86,7 @@ class Track(TrackBase, table=True):
         description="The unique identifier for the track",
     )
 
-    # playlists: List["Playlists"] = Relationship(back_populates="tracks")
+    playlists: List["Playlist"] = Relationship(back_populates="tracks", link_model=PlaylistTrack)
     album: Optional["Album"] = Relationship(back_populates="tracks")  # noqa: F821
     genre: Optional["Genre"] = Relationship(back_populates="tracks")  # noqa: F821
     media_type: Optional["MediaType"] = Relationship(back_populates="tracks")  # noqa: F821
@@ -125,3 +126,4 @@ class TrackPatch(TrackBase):
 
 from .genres import GenreRead  # noqa: E402
 from .media_types import MediaTypeRead  # noqa: E402
+from .playlists import Playlist # noqa: E402

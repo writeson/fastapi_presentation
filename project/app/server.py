@@ -1,3 +1,17 @@
+"""
+This application is a presentation of FastAPI to show how it can be used
+to quickly build complete REST APIs with Python, SQLModel for connecting
+to a database, and Pydantic for data validation and serialization.
+
+FastAPI provides asynchronous endpoints and path operations for all
+the REST CRUD operations. This allows it to scale well in terms of performance,
+concurrency, scalability and being able to handle multiple requests at once.
+
+A SQLite database is used for simplicity in getting the app
+up and running. The database itself is the chinook sample database
+available here: https://www.sqlitetutorial.net/sqlite-sample-database/
+"""
+
 import logging
 from contextlib import asynccontextmanager
 
@@ -5,6 +19,9 @@ from database import init_db
 from endpoints.artists.routes import router as artists_router
 from endpoints.albums.routes import router as albums_router
 from endpoints.tracks.routes import router as tracks_router
+from endpoints.genres.routes import router as genres_router
+from endpoints.media_types.routes import router as media_types_router
+from endpoints.playlists.routes import router as playlists_router
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -62,6 +79,9 @@ def app_factory():
     fastapi_app.include_router(artists_router, prefix="/api/v1")
     fastapi_app.include_router(albums_router, prefix="/api/v1")
     fastapi_app.include_router(tracks_router, prefix="/api/v1")
+    fastapi_app.include_router(genres_router, prefix="/api/v1")
+    fastapi_app.include_router(media_types_router, prefix="/api/v1")
+    fastapi_app.include_router(playlists_router, prefix="/api/v1")
 
     configure_logging(logging_level=logging.DEBUG)
     return fastapi_app

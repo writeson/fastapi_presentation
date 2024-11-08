@@ -1,3 +1,8 @@
+from fastapi import HTTPException
+from sqlalchemy import select
+from sqlalchemy.orm import joinedload
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from project.app.models.artists import (
     Artist,
     ArtistCreate,
@@ -6,10 +11,6 @@ from project.app.models.artists import (
     ArtistUpdate,
     ArtistPatch,
 )
-
-from sqlalchemy import select
-from sqlalchemy.orm import joinedload
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def create_artist(session: AsyncSession, artist: ArtistCreate):
@@ -24,7 +25,7 @@ async def create_artist(session: AsyncSession, artist: ArtistCreate):
     return ArtistRead.model_validate(db_artist)
 
 
-async def read_artist(session: AsyncSession, id: int) -> ArtistRead | None:
+async def read_artist(session: AsyncSession, id: int) -> ArtistRead:
     """
     Retrieve an Artist from the database by ID.
     Returns the ArtistRead model if found, None otherwise.
@@ -32,12 +33,14 @@ async def read_artist(session: AsyncSession, id: int) -> ArtistRead | None:
     query = select(Artist).where(Artist.id == id)
     result = await session.execute(query)
     db_artist = result.scalar_one_or_none()
+    if db_artist is None:
+        raise HTTPException(status_code=404, detail="Artist not found")
     return ArtistRead.model_validate(db_artist)
 
 
 async def read_artist_with_albums(
     session: AsyncSession, id: int
-) -> ArtistReadWithAlbums | None:
+) -> ArtistReadWithAlbums:
     """
     Retrieve an Artist with its albums from the database.
     Returns an ArtistReadWithAlbums model."""
@@ -45,7 +48,7 @@ async def read_artist_with_albums(
     result = await session.execute(query)
     db_artist = result.unique().scalar_one_or_none()
     if db_artist is None:
-        return None
+        raise HTTPException(status_code=404, detail="Artist not found")
     return ArtistReadWithAlbums.model_validate(db_artist)
 
 
@@ -71,7 +74,7 @@ async def update_artist(
     """
     db_artist = await read_artist(session, id)
     if db_artist is None:
-        return None
+        raise HTTPException(status_code=404, detail="Artist not found")
 
     for key, value in artist.dict(exclude_unset=True).items():
         setattr(db_artist, key, value)
@@ -90,7 +93,7 @@ async def patch_artist(
     """
     db_artist = await read_artist(session, id)
     if db_artist is None:
-        return None
+        raise HTTPException(status_code=404, detail="Artist not found")
 
     for key, value in artist.dict(exclude_unset=True).items():
         if value is not None:

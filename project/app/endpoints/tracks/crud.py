@@ -48,7 +48,13 @@ async def read_tracks(
     Retrieve all Track from the database.
     Returns a list of TrackRead models.
     """
-    query = select(Track).offset(offset).limit(limit)
+    query = (
+        select(Track)
+        .options(joinedload(Track.genre))
+        .options(joinedload(Track.media_type))
+        .offset(offset)
+        .limit(limit)
+    )
     result = await session.execute(query)
     db_tracks = result.scalars().all()
     return db_tracks

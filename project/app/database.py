@@ -13,7 +13,7 @@ POOL_SIZE = 5
 # create the async engine with connection pooling
 engine = create_async_engine(
     DATABASE_URL,
-    echo=True,
+    echo=False,
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
