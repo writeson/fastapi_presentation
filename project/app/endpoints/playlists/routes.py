@@ -27,7 +27,7 @@ async def create_playlist(genre: PlaylistCreate, db: AsyncSession = Depends(get_
 
 @router.get("/", response_model=list[PlaylistRead])
 async def read_playlists(
-        offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)
+    offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)
 ):
     async with db as session:
         return await playlist_crud.read_playlists(
@@ -37,8 +37,8 @@ async def read_playlists(
 
 @router.get("/{id}", response_model=PlaylistRead)
 async def read_playlist(
-        id: int = Path(..., title="The ID of the genre to get"),
-        db: AsyncSession = Depends(get_db),
+    id: int = Path(..., title="The ID of the genre to get"),
+    db: AsyncSession = Depends(get_db),
 ):
     async with db as session:
         db_playlist = await playlist_crud.read_playlist(session=session, id=id)
@@ -49,9 +49,9 @@ async def read_playlist(
 
 @router.put("/{id}", response_model=PlaylistRead)
 async def update_playlist(
-        genre: PlaylistUpdate,
-        id: int = Path(..., title="The ID of the playlist to update"),
-        db: AsyncSession = Depends(get_db),
+    genre: PlaylistUpdate,
+    id: int = Path(..., title="The ID of the playlist to update"),
+    db: AsyncSession = Depends(get_db),
 ):
     async with db as session:
         db_playlist = await playlist_crud.update_playlist(
@@ -64,9 +64,9 @@ async def update_playlist(
 
 @router.patch("/{id}", response_model=PlaylistRead)
 async def patch_playlist(
-        genre: PlaylistPatch,
-        id: int = Path(..., title="The ID of the playlist to patch"),
-        db: AsyncSession = Depends(get_db),
+    genre: PlaylistPatch,
+    id: int = Path(..., title="The ID of the playlist to patch"),
+    db: AsyncSession = Depends(get_db),
 ):
     async with db as session:
         db_playlist = await playlist_crud.patch_playlist(

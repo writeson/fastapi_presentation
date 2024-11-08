@@ -37,7 +37,7 @@ async def read_genre(session: AsyncSession, id: int) -> GenreRead:
 
 
 async def read_genres(
-        session: AsyncSession, offset: int = 0, limit: int = 10
+    session: AsyncSession, offset: int = 0, limit: int = 10
 ) -> list[GenreRead]:
     """
     Retrieve all Genres from the database.
@@ -49,9 +49,7 @@ async def read_genres(
     return [GenreRead.model_validate(db_genre) for db_genre in db_genres]
 
 
-async def update_genre(
-        session: AsyncSession, id: int, genre: GenreUpdate
-) -> GenreRead:
+async def update_genre(session: AsyncSession, id: int, genre: GenreUpdate) -> GenreRead:
     """
     Update an existing Genre in the database using the passed in GenreUpdate model.
     Returns the updated GenreRead model if found, raises HTTPException otherwise.
@@ -68,9 +66,7 @@ async def update_genre(
     return GenreRead.model_validate(db_genre)
 
 
-async def patch_genre(
-        session: AsyncSession, id: int, genre: GenrePatch
-) -> GenreRead:
+async def patch_genre(session: AsyncSession, id: int, genre: GenrePatch) -> GenreRead:
     """
     Partially update an existing Genre in the database using the passed in GenrePatch model.
     Returns the updated GenreRead model if found, raises HTTPException otherwise.

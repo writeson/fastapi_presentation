@@ -20,14 +20,18 @@ router = APIRouter(
 
 
 @router.post("/", response_model=MediaTypeRead, status_code=status.HTTP_201_CREATED)
-async def create_media_type(media_type: MediaTypeCreate, db: AsyncSession = Depends(get_db)):
+async def create_media_type(
+    media_type: MediaTypeCreate, db: AsyncSession = Depends(get_db)
+):
     async with db as session:
-        return await media_type_crud.create_media_type(session=session, media_type=media_type)
+        return await media_type_crud.create_media_type(
+            session=session, media_type=media_type
+        )
 
 
 @router.get("/", response_model=list[MediaTypeRead])
 async def read_media_types(
-        offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)
+    offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)
 ):
     async with db as session:
         return await media_type_crud.read_media_types(
@@ -37,8 +41,8 @@ async def read_media_types(
 
 @router.get("/{id}", response_model=MediaTypeRead)
 async def read_media_type(
-        id: int = Path(..., title="The ID of the media type to get"),
-        db: AsyncSession = Depends(get_db),
+    id: int = Path(..., title="The ID of the media type to get"),
+    db: AsyncSession = Depends(get_db),
 ):
     async with db as session:
         db_media_type = await media_type_crud.read_media_type(session=session, id=id)
@@ -49,9 +53,9 @@ async def read_media_type(
 
 @router.put("/{id}", response_model=MediaTypeRead)
 async def update_media_type(
-        media_type: MediaTypeUpdate,
-        id: int = Path(..., title="The ID of the media type to update"),
-        db: AsyncSession = Depends(get_db),
+    media_type: MediaTypeUpdate,
+    id: int = Path(..., title="The ID of the media type to update"),
+    db: AsyncSession = Depends(get_db),
 ):
     async with db as session:
         db_media_type = await media_type_crud.update_media_type(
@@ -64,9 +68,9 @@ async def update_media_type(
 
 @router.patch("/{id}", response_model=MediaTypeRead)
 async def patch_media_type(
-        media_type: MediaTypePatch,
-        id: int = Path(..., title="The ID of the media type to patch"),
-        db: AsyncSession = Depends(get_db),
+    media_type: MediaTypePatch,
+    id: int = Path(..., title="The ID of the media type to patch"),
+    db: AsyncSession = Depends(get_db),
 ):
     async with db as session:
         db_media_type = await media_type_crud.patch_media_type(

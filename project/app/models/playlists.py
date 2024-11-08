@@ -23,7 +23,9 @@ class Playlist(PlaylistBase, table=True):
         sa_column=Column("PlaylistId", Integer, primary_key=True),
         description="The unique identifier for the playlist",
     )
-    tracks: List["Track"] = Relationship(back_populates="playlists", link_model=PlaylistTrack)
+    tracks: List["Track"] = Relationship(
+        back_populates="playlists", link_model=PlaylistTrack
+    )
 
     model_config = ConfigDict(from_attributes=True)
 

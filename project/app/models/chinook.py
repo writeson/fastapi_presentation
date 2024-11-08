@@ -99,12 +99,12 @@
 #
 # class Playlists(SQLModel, table=True):
 #     __tablename__ = "playlists"
-# 
+#
 #     playlist_id: Optional[int] = Field(default=None, primary_key=True)
 #     name: Optional[str] = Field(default=None, max_length=120)
-# 
+#
 #     tracks: List["Tracks"] = Relationship(back_populates="playlists")
-# 
+#
 #     class Config:
 #         sa_column_kwargs = {
 #             "playlist_id": {"name": "PlaylistId"},

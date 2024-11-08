@@ -16,9 +16,5 @@ class PlaylistTrack(SQLModel, table=True):
         primary_key=True,
         nullable=False,
     )
-    playlist: Optional["Playlist"] = Relationship(back_populates="tracks")
-    track: Optional["Track"] = Relationship(back_populates="playlists")    
-    
-    
-    # from .playlists import Playlist  # noqa: E402
-    # from .tracks import Track  # noqa: E402
+    playlist: Optional["Playlist"] = Relationship(back_populates="tracks")  # noqa: F821
+    track: Optional["Track"] = Relationship(back_populates="playlists")  # noqa: F821

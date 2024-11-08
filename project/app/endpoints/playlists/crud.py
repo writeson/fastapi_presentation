@@ -37,7 +37,7 @@ async def read_playlist(session: AsyncSession, id: int) -> PlaylistRead:
 
 
 async def read_playlists(
-        session: AsyncSession, offset: int = 0, limit: int = 10
+    session: AsyncSession, offset: int = 0, limit: int = 10
 ) -> list[PlaylistRead]:
     """
     Retrieve all Playlists from the database.
@@ -50,7 +50,7 @@ async def read_playlists(
 
 
 async def update_playlist(
-        session: AsyncSession, id: int, genre: PlaylistUpdate
+    session: AsyncSession, id: int, genre: PlaylistUpdate
 ) -> PlaylistRead:
     """
     Update an existing Playlist in the database using the passed in PlaylistUpdate model.
@@ -69,7 +69,7 @@ async def update_playlist(
 
 
 async def patch_playlist(
-        session: AsyncSession, id: int, genre: PlaylistPatch
+    session: AsyncSession, id: int, genre: PlaylistPatch
 ) -> PlaylistRead:
     """
     Partially update an existing Playlist in the database using the passed in PlaylistPatch model.

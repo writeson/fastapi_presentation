@@ -37,7 +37,7 @@ async def read_media_type(session: AsyncSession, id: int) -> MediaTypeRead:
 
 
 async def read_media_types(
-        session: AsyncSession, offset: int = 0, limit: int = 10
+    session: AsyncSession, offset: int = 0, limit: int = 10
 ) -> list[MediaTypeRead]:
     """
     Retrieve all Media types from the database.
@@ -46,11 +46,13 @@ async def read_media_types(
     query = select(MediaType).offset(offset).limit(limit)
     result = await session.execute(query)
     db_media_types = result.scalars().all()
-    return [MediaTypeRead.model_validate(db_media_type) for db_media_type in db_media_types]
+    return [
+        MediaTypeRead.model_validate(db_media_type) for db_media_type in db_media_types
+    ]
 
 
 async def update_media_type(
-        session: AsyncSession, id: int, media_type: MediaTypeUpdate
+    session: AsyncSession, id: int, media_type: MediaTypeUpdate
 ) -> MediaTypeRead:
     """
     Update an existing MediaType in the database using the passed in MediaTypeUpdate model.
@@ -69,7 +71,7 @@ async def update_media_type(
 
 
 async def patch_media_type(
-        session: AsyncSession, id: int, media_type: MediaTypePatch
+    session: AsyncSession, id: int, media_type: MediaTypePatch
 ) -> MediaTypeRead:
     """
     Partially update an existing MediaType in the database using the passed in MediaTypePatch model.
