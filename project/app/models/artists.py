@@ -1,4 +1,4 @@
-from typing import Optional, Annotated, List
+from typing import Optional, List
 from sqlalchemy import Column, Integer
 from sqlmodel import SQLModel, Field, Relationship
 from pydantic import ConfigDict
@@ -6,13 +6,13 @@ from pydantic import ConfigDict
 
 class ArtistBase(SQLModel):
     name: str = Field(
-        default=None, 
+        default=None,
         description="The name of the artist",
         title="Artist Name",
         min_length=0,
         max_length=120,
-    ) 
-    
+    )
+
 
 class Artist(ArtistBase, table=True):
     __tablename__ = "artists"
@@ -25,7 +25,7 @@ class Artist(ArtistBase, table=True):
     name: str = Field(sa_column=Column("Name"))
 
     albums: List["Album"] = Relationship(back_populates="artist")
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -61,4 +61,4 @@ class ArtistPatch(ArtistBase):
     name: Optional[str] = Field(default=None)
 
 
-from .albums import Album
+from .albums import Album  # noqa: E402

@@ -21,7 +21,7 @@ async def create_artist(session: AsyncSession, artist: ArtistCreate):
     session.add(db_artist)
     await session.commit()
     await session.refresh(db_artist)
-    return db_artist
+    return ArtistRead.model_validate(db_artist)
 
 
 async def read_artist(session: AsyncSession, id: int) -> ArtistRead | None:
@@ -32,17 +32,16 @@ async def read_artist(session: AsyncSession, id: int) -> ArtistRead | None:
     query = select(Artist).where(Artist.id == id)
     result = await session.execute(query)
     db_artist = result.scalar_one_or_none()
-    return db_artist
+    return ArtistRead.model_validate(db_artist)
 
-async def read_artist_with_albums(session: AsyncSession, id: int) -> ArtistReadWithAlbums | None:
+
+async def read_artist_with_albums(
+    session: AsyncSession, id: int
+) -> ArtistReadWithAlbums | None:
     """
     Retrieve an Artist with its albums from the database.
-    Returns an ArtistReadWithAlbums model.    """
-    query = (
-        select(Artist)
-        .options(joinedload(Artist.albums))
-        .where(Artist.id == id)
-    )
+    Returns an ArtistReadWithAlbums model."""
+    query = select(Artist).options(joinedload(Artist.albums)).where(Artist.id == id)
     result = await session.execute(query)
     db_artist = result.unique().scalar_one_or_none()
     if db_artist is None:
@@ -50,7 +49,9 @@ async def read_artist_with_albums(session: AsyncSession, id: int) -> ArtistReadW
     return ArtistReadWithAlbums.model_validate(db_artist)
 
 
-async def read_artists(session: AsyncSession, offset: int=0, limit: int=10) -> list[ArtistRead]:
+async def read_artists(
+    session: AsyncSession, offset: int = 0, limit: int = 10
+) -> list[ArtistRead]:
     """
     Retrieve all Artists from the database.
     Returns a list of ArtistRead models.
@@ -58,10 +59,12 @@ async def read_artists(session: AsyncSession, offset: int=0, limit: int=10) -> l
     query = select(Artist).offset(offset).limit(limit)
     result = await session.execute(query)
     db_artists = result.scalars().all()
-    return db_artists
+    return [ArtistRead.model_validate(db_artist) for db_artist in db_artists]
 
 
-async def update_artist(session: AsyncSession, id: int, artist: ArtistUpdate) -> ArtistRead | None:
+async def update_artist(
+    session: AsyncSession, id: int, artist: ArtistUpdate
+) -> ArtistRead | None:
     """
     Update an existing Artist in the database using the passed in ArtistUpdate model.
     Returns the updated ArtistRead model if found, None otherwise.
@@ -75,10 +78,12 @@ async def update_artist(session: AsyncSession, id: int, artist: ArtistUpdate) ->
 
     await session.commit()
     await session.refresh(db_artist)
-    return db_artist
+    return ArtistRead.model_validate(db_artist)
 
 
-async def patch_artist(session: AsyncSession, id: int, artist: ArtistPatch) -> ArtistRead | None:
+async def patch_artist(
+    session: AsyncSession, id: int, artist: ArtistPatch
+) -> ArtistRead | None:
     """
     Partially update an existing Artist in the database using the passed in ArtistPatch model.
     Returns the updated ArtistRead model if found, None otherwise.
@@ -93,4 +98,4 @@ async def patch_artist(session: AsyncSession, id: int, artist: ArtistPatch) -> A
 
     await session.commit()
     await session.refresh(db_artist)
-    return db_artist
+    return ArtistRead.model_validate(db_artist)

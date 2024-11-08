@@ -1,4 +1,4 @@
-from typing import Optional, Annotated, List
+from typing import Optional, List
 from sqlalchemy import Column, Integer, Index, ForeignKey
 from sqlmodel import SQLModel, Field, Relationship
 from pydantic import ConfigDict
@@ -34,10 +34,8 @@ class Album(AlbumBase, table=True):
     tracks: List["Track"] = Relationship(back_populates="album")
 
     model_config = ConfigDict(from_attributes=True)
-    
-    __table_args__ = (
-        Index("IFK_AlbumArtistId", "ArtistId"),
-    )
+
+    __table_args__ = (Index("IFK_AlbumArtistId", "ArtistId"),)
 
 
 # Create operation
@@ -57,8 +55,8 @@ class AlbumReadWithTracks(AlbumBase):
     tracks: List["Track"] = []
 
     model_config = ConfigDict(from_attributes=True)
-        
-        
+
+
 # Update operation (Put)
 class AlbumUpdate(AlbumBase):
     title: str | None = Field(default=None)
@@ -69,5 +67,5 @@ class AlbumPatch(AlbumBase):
     title: Optional[str] = Field(default=None)
 
 
-from .artists import Artist, ArtistRead
-from .tracks import Track
+from .artists import Artist  # noqa: E402
+from .tracks import Track  # noqa: E402

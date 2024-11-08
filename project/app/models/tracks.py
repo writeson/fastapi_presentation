@@ -1,47 +1,80 @@
-from typing import Optional, Annotated
+from typing import Optional
 from sqlalchemy import Column, Integer, Numeric, String, Index, ForeignKey
 from sqlmodel import SQLModel, Field, Relationship
 from decimal import Decimal
+from pydantic import ConfigDict
 
 
 class TrackBase(SQLModel):
     name: str = Field(
         default=None,
         sa_column=Column("Name", String(200)),
-        description="The name of the track"
+        description="The name of the track",
     )
     media_type_id: int = Field(
         sa_column=Column("MediaTypeId", Integer, ForeignKey("media_types.MediaTypeId")),
-        description="Foreign key to the media type"
+        description="Foreign key to the media type",
     )
     milliseconds: int = Field(
         sa_column=Column("Milliseconds", Integer),
-        description="The length of the track in milliseconds"
+        description="The length of the track in milliseconds",
     )
     unit_price: Decimal = Field(
         sa_column=Column("UnitPrice", Numeric(10, 2)),
-        description="The price of the track"
+        description="The price of the track",
     )
     album_id: Optional[int] = Field(
         default=None,
         sa_column=Column("AlbumId", Integer, ForeignKey("albums.AlbumId")),
-        description="Foreign key to the album"
+        description="Foreign key to the album",
     )
     genre_id: Optional[int] = Field(
         default=None,
         sa_column=Column("GenreId", Integer, ForeignKey("genres.GenreId")),
-        description="Foreign key to the genre"
+        description="Foreign key to the genre",
     )
     composer: Optional[str] = Field(
         default=None,
         sa_column=Column("Composer", String(220)),
-        description="The composer of the track"
+        description="The composer of the track",
     )
     bytes: Optional[int] = Field(
         default=None,
         sa_column=Column("Bytes", Integer),
-        description="The size of the track in bytes"
+        description="The size of the track in bytes",
     )
+
+
+class TrackReadBase(SQLModel):
+    name: str = Field(
+        default=None,
+        sa_column=Column("Name", String(200)),
+        description="The name of the track",
+    )
+    milliseconds: int = Field(
+        sa_column=Column("Milliseconds", Integer),
+        description="The length of the track in milliseconds",
+    )
+    unit_price: Decimal = Field(
+        sa_column=Column("UnitPrice", Numeric(10, 2)),
+        description="The price of the track",
+    )
+    album_id: Optional[int] = Field(
+        default=None,
+        sa_column=Column("AlbumId", Integer, ForeignKey("albums.AlbumId")),
+        description="Foreign key to the album",
+    )
+    composer: Optional[str] = Field(
+        default=None,
+        sa_column=Column("Composer", String(220)),
+        description="The composer of the track",
+    )
+    bytes: Optional[int] = Field(
+        default=None,
+        sa_column=Column("Bytes", Integer),
+        description="The size of the track in bytes",
+    )
+
 
 class Track(TrackBase, table=True):
     __tablename__ = "tracks"
@@ -49,13 +82,13 @@ class Track(TrackBase, table=True):
     id: Optional[int] = Field(
         default=None,
         sa_column=Column("TrackId", Integer, primary_key=True),
-        description="The unique identifier for the track"
+        description="The unique identifier for the track",
     )
 
     # playlists: List["Playlists"] = Relationship(back_populates="tracks")
-    album: Optional["Album"] = Relationship(back_populates="tracks")
-    genre: Optional["Genre"] = Relationship(back_populates="tracks")
-    media_type: Optional["MediaType"] = Relationship(back_populates="tracks")
+    album: Optional["Album"] = Relationship(back_populates="tracks")  # noqa: F821
+    genre: Optional["Genre"] = Relationship(back_populates="tracks")  # noqa: F821
+    media_type: Optional["MediaType"] = Relationship(back_populates="tracks")  # noqa: F821
     # invoice_items: List["InvoiceItems"] = Relationship(back_populates="tracks")
 
     __table_args__ = (
@@ -71,11 +104,13 @@ class TrackCreate(TrackBase):
 
 
 # Read operation
-class TrackRead(TrackBase):
+class TrackRead(TrackReadBase):
     id: int
+    genre: "GenreRead"
+    media_type: "MediaTypeRead"
 
-    class Config:
-        from_attributes = True
+
+model_config = ConfigDict(from_attributes=True)
 
 
 # Update operation (Put)
@@ -88,5 +123,5 @@ class TrackPatch(TrackBase):
     name: Optional[str] = Field(default=None)
 
 
-from .genres import Genre
-from .media_types import MediaType
+from .genres import GenreRead  # noqa: E402
+from .media_types import MediaTypeRead  # noqa: E402

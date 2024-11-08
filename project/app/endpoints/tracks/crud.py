@@ -40,7 +40,10 @@ async def read_track(session: AsyncSession, id: int) -> TrackRead | None:
         return None
     return db_track
 
-async def read_tracks(session: AsyncSession, offset: int=0, limit: int=10) -> list[TrackRead]:
+
+async def read_tracks(
+    session: AsyncSession, offset: int = 0, limit: int = 10
+) -> list[TrackRead]:
     """
     Retrieve all Track from the database.
     Returns a list of TrackRead models.
@@ -51,7 +54,9 @@ async def read_tracks(session: AsyncSession, offset: int=0, limit: int=10) -> li
     return db_tracks
 
 
-async def update_track(session: AsyncSession, id: int, album: TrackUpdate) -> TrackRead | None:
+async def update_track(
+    session: AsyncSession, id: int, album: TrackUpdate
+) -> TrackRead | None:
     """
     Update an existing Track in the database using the passed in TrackUpdate model.
     Returns the updated TrackRead model if found, None otherwise.
@@ -68,7 +73,9 @@ async def update_track(session: AsyncSession, id: int, album: TrackUpdate) -> Tr
     return db_track
 
 
-async def patch_track(session: AsyncSession, id: int, album: TrackPatch) -> TrackRead | None:
+async def patch_track(
+    session: AsyncSession, id: int, album: TrackPatch
+) -> TrackRead | None:
     """
     Partially update an existing Track in the database using the passed in TrackPatch model.
     Returns the updated TrackRead model if found, None otherwise.

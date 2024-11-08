@@ -1,4 +1,3 @@
-
 import logging
 from contextlib import asynccontextmanager
 
@@ -33,8 +32,8 @@ async def lifespan(app: FastAPI):
 
     """Event handler for the shutdown event"""
     logger.info("Shutting down presentation app")
-    
-    
+
+
 def app_factory():
     """
     Creates the FastAPI application object and configures
@@ -64,15 +63,14 @@ def app_factory():
     fastapi_app.include_router(albums_router, prefix="/api/v1")
     fastapi_app.include_router(tracks_router, prefix="/api/v1")
 
-    configure_logging(
-        logging_level=logging.DEBUG
-    )
+    configure_logging(logging_level=logging.DEBUG)
     return fastapi_app
 
 
 app = app_factory()
-    
+
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

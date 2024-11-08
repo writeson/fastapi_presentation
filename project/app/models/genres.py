@@ -1,5 +1,5 @@
 from typing import Optional, List
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer
 from sqlmodel import SQLModel, Field, Relationship
 from pydantic import ConfigDict
 
@@ -60,4 +60,4 @@ class GenrePatch(GenreBase):
     name: Optional[str] = Field(default=None)
 
 
-from .tracks import Track
+from .tracks import Track  # noqa: E402

@@ -34,22 +34,21 @@ async def read_album(session: AsyncSession, id: int) -> AlbumRead | None:
     db_album = result.scalar_one_or_none()
     return db_album
 
+
 async def read_album_with_tracks(session: AsyncSession, id: int) -> AlbumReadWithTracks:
     """
     Retrieve an Album from the database with associated tracks
     Returns an album with a list of associated tracks
     """
-    query = (
-        select(Album)
-        .options(selectinload(Album.tracks))
-        .where(Album.id == id)
-    )
+    query = select(Album).options(selectinload(Album.tracks)).where(Album.id == id)
     result = await session.execute(query)
     db_artist = result.scalar_one_or_none()
     return db_artist
 
 
-async def read_albums(session: AsyncSession, offset: int=0, limit: int=10) -> list[AlbumRead]:
+async def read_albums(
+    session: AsyncSession, offset: int = 0, limit: int = 10
+) -> list[AlbumRead]:
     """
     Retrieve all Album from the database.
     Returns a list of AlbumRead models.
@@ -60,7 +59,9 @@ async def read_albums(session: AsyncSession, offset: int=0, limit: int=10) -> li
     return db_albums
 
 
-async def update_album(session: AsyncSession, id: int, album: AlbumUpdate) -> AlbumRead | None:
+async def update_album(
+    session: AsyncSession, id: int, album: AlbumUpdate
+) -> AlbumRead | None:
     """
     Update an existing Album in the database using the passed in AlbumUpdate model.
     Returns the updated AlbumRead model if found, None otherwise.
@@ -77,7 +78,9 @@ async def update_album(session: AsyncSession, id: int, album: AlbumUpdate) -> Al
     return db_album
 
 
-async def patch_album(session: AsyncSession, id: int, album: AlbumPatch) -> AlbumRead | None:
+async def patch_album(
+    session: AsyncSession, id: int, album: AlbumPatch
+) -> AlbumRead | None:
     """
     Partially update an existing Album in the database using the passed in AlbumPatch model.
     Returns the updated AlbumRead model if found, None otherwise.

@@ -1,4 +1,4 @@
-# 
+#
 # This module contains various helper routines to get things working
 # the way I want them
 #

@@ -15,8 +15,9 @@ engine = create_async_engine(
     DATABASE_URL,
     echo=True,
     connect_args={"check_same_thread": False},
-    poolclass=StaticPool
+    poolclass=StaticPool,
 )
+
 
 async def init_db():
     """Initialize the database and create tables if they don't exist."""
@@ -32,4 +33,3 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             yield session
         finally:
             await session.close()
-            
