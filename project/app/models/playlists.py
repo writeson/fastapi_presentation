@@ -35,7 +35,7 @@ class PlaylistCreate(PlaylistBase):
 
 
 class PlaylistRead(PlaylistBase):
-    playlist_id: int
+    id: int
 
 
 class PlaylistUpdate(PlaylistBase):

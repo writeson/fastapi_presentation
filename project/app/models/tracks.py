@@ -113,8 +113,20 @@ class TrackRead(TrackReadBase):
     genre: "GenreRead"
     media_type: "MediaTypeRead"
 
+    model_config = ConfigDict(from_attributes=True)
 
-model_config = ConfigDict(from_attributes=True)
+
+# Read with playlists operation
+class TrackReadWithPlaylists(TrackReadBase):
+    id: int
+    genre: "GenreRead"
+    media_type: "MediaTypeRead"
+    playlists: List["PlaylistRead"] = Field(default_factory=list)
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        populate_by_name=True,
+    )
 
 
 # Update operation (Put)
@@ -129,4 +141,4 @@ class TrackPatch(TrackBase):
 
 from .genres import GenreRead  # noqa: E402
 from .media_types import MediaTypeRead  # noqa: E402
-from .playlists import Playlist  # noqa: E402
+from .playlists import Playlist, PlaylistRead  # noqa: E402

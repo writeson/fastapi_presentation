@@ -13,7 +13,7 @@ from project.app.models.artists import (
 )
 
 
-async def create_artist(session: AsyncSession, artist: ArtistCreate):
+async def create_artist(session: AsyncSession, artist: ArtistCreate) -> ArtistRead:
     """
     Create a new Artist in the database from the passed in ArtistCreate model.
     Returns the created ArtistRead model.
@@ -38,6 +38,19 @@ async def read_artist(session: AsyncSession, id: int) -> ArtistRead:
     return ArtistRead.model_validate(db_artist)
 
 
+async def read_artists(
+    session: AsyncSession, offset: int = 0, limit: int = 10
+) -> list[ArtistRead]:
+    """
+    Retrieve all Artists from the database.
+    Returns a list of ArtistRead models.
+    """
+    query = select(Artist).offset(offset).limit(limit)
+    result = await session.execute(query)
+    db_artists = result.scalars().all()
+    return [ArtistRead.model_validate(db_artist) for db_artist in db_artists]
+
+
 async def read_artist_with_albums(
     session: AsyncSession, id: int
 ) -> ArtistReadWithAlbums:
@@ -52,22 +65,9 @@ async def read_artist_with_albums(
     return ArtistReadWithAlbums.model_validate(db_artist)
 
 
-async def read_artists(
-    session: AsyncSession, offset: int = 0, limit: int = 10
-) -> list[ArtistRead]:
-    """
-    Retrieve all Artists from the database.
-    Returns a list of ArtistRead models.
-    """
-    query = select(Artist).offset(offset).limit(limit)
-    result = await session.execute(query)
-    db_artists = result.scalars().all()
-    return [ArtistRead.model_validate(db_artist) for db_artist in db_artists]
-
-
 async def update_artist(
     session: AsyncSession, id: int, artist: ArtistUpdate
-) -> ArtistRead | None:
+) -> ArtistRead:
     """
     Update an existing Artist in the database using the passed in ArtistUpdate model.
     Returns the updated ArtistRead model if found, None otherwise.
@@ -86,7 +86,7 @@ async def update_artist(
 
 async def patch_artist(
     session: AsyncSession, id: int, artist: ArtistPatch
-) -> ArtistRead | None:
+) -> ArtistRead:
     """
     Partially update an existing Artist in the database using the passed in ArtistPatch model.
     Returns the updated ArtistRead model if found, None otherwise.

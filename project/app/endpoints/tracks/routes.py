@@ -1,6 +1,7 @@
 from project.app.models.tracks import (
     TrackCreate,
     TrackRead,
+    TrackReadWithPlaylists,
     TrackUpdate,
     TrackPatch,
 )
@@ -39,6 +40,18 @@ async def read_track(
 ):
     async with db as session:
         db_track = await track_crud.read_track(session=session, id=id)
+        if db_track is None:
+            raise HTTPException(status_code=404, detail="Track not found")
+        return db_track
+
+
+@router.get("/{id}/playlists", response_model=TrackReadWithPlaylists)
+async def read_track_with_playlists(
+    id: int = Path(..., title="The ID of the artist to get"),
+    db: AsyncSession = Depends(get_db),
+):
+    async with db as session:
+        db_track = await track_crud.read_track_with_playlists(session=session, id=id)
         if db_track is None:
             raise HTTPException(status_code=404, detail="Track not found")
         return db_track
