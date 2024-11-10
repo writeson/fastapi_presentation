@@ -12,7 +12,7 @@ up and running. The database itself is the chinook sample database
 available here: https://www.sqlitetutorial.net/sqlite-sample-database/
 """
 
-import logging
+from logging import getLogger
 from contextlib import asynccontextmanager
 
 from database import init_db
@@ -25,12 +25,12 @@ from endpoints.playlists.routes import router as playlists_router
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from structlog import get_logger
+from starlette.middleware.base import BaseHTTPMiddleware
 
-from helpers.config import configure_logging
+from middleware import log_middleware
+from logger import log_config
 
-
-logger = get_logger(__name__)
+logger = getLogger()
 
 
 class TagsMetaDataFileNotFound(Exception):
@@ -75,6 +75,8 @@ def app_factory():
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    fastapi_app.add_middleware(BaseHTTPMiddleware, dispatch=log_middleware)
+
     # add all the endpoint routers
     fastapi_app.include_router(artists_router, prefix="/api/v1")
     fastapi_app.include_router(albums_router, prefix="/api/v1")
@@ -82,8 +84,6 @@ def app_factory():
     fastapi_app.include_router(genres_router, prefix="/api/v1")
     fastapi_app.include_router(media_types_router, prefix="/api/v1")
     fastapi_app.include_router(playlists_router, prefix="/api/v1")
-
-    configure_logging(logging_level=logging.DEBUG)
     return fastapi_app
 
 
@@ -93,4 +93,9 @@ app = app_factory()
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=8000,
+        log_level=log_config,
+    )
