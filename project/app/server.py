@@ -22,6 +22,7 @@ from endpoints.tracks.routes import router as tracks_router
 from endpoints.genres.routes import router as genres_router
 from endpoints.media_types.routes import router as media_types_router
 from endpoints.playlists.routes import router as playlists_router
+from endpoints.invoices.routes import router as invoices_router
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -84,6 +85,7 @@ def app_factory():
     fastapi_app.include_router(genres_router, prefix="/api/v1")
     fastapi_app.include_router(media_types_router, prefix="/api/v1")
     fastapi_app.include_router(playlists_router, prefix="/api/v1")
+    fastapi_app.include_router(invoices_router, prefix="/api/v1")
     return fastapi_app
 
 

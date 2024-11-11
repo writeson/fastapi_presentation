@@ -7,7 +7,6 @@ from project.app.models.invoices import (
     Invoice,
     InvoiceCreate,
     InvoiceRead,
-    InvoiceReadWithPlaylists,
     InvoiceUpdate,
     InvoicePatch,
 )
@@ -32,10 +31,6 @@ async def read_invoice(session: AsyncSession, id: int) -> InvoiceRead:
     """
     query = (
         select(Invoice)
-        .options(
-            joinedload(Invoice.genre),
-            joinedload(Invoice.media_type),
-        )
         .where(Invoice.id == id)
     )
     result = await session.execute(query)
@@ -54,35 +49,12 @@ async def read_invoices(
     """
     query = (
         select(Invoice)
-        .options(
-            joinedload(Invoice.genre),
-            joinedload(Invoice.media_type),
-        )
         .offset(offset)
         .limit(limit)
     )
     result = await session.execute(query)
     db_invoices = result.scalars().all()
     return [InvoiceRead.model_validate(db_invoice) for db_invoice in db_invoices]
-
-
-async def read_invoice_with_playlists(
-    session: AsyncSession, id: int
-) -> InvoiceReadWithPlaylists:
-    query = (
-        select(Invoice)
-        .options(
-            joinedload(Invoice.genre),
-            joinedload(Invoice.media_type),
-            joinedload(Invoice.playlists),
-        )
-        .where(Invoice.id == id)
-    )
-    result = await session.execute(query)
-    db_invoice = result.unique().scalar_one_or_none()
-    if db_invoice is None:
-        raise HTTPException(status_code=404, detail="Invoice not found")
-    return InvoiceReadWithPlaylists.model_validate(db_invoice)
 
 
 async def update_invoice(

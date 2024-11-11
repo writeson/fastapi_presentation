@@ -1,7 +1,7 @@
 from typing import Optional
 from datetime import datetime
 from decimal import Decimal
-from sqlalchemy import Column, Integer, DateTime, String, Numeric
+from sqlalchemy import Column, Integer, DateTime, String, Numeric, ForeignKey
 from sqlmodel import SQLModel, Field
 from pydantic import ConfigDict
 
@@ -52,7 +52,7 @@ class Invoice(InvoiceBase, table=True):
         description="The unique identifier for the invoice",
     )
     customer_id: int = Field(
-        sa_column=Column("CustomerId", Integer, foreign_key="customers.CustomerId"),
+        sa_column=Column("CustomerId", Integer, ForeignKey("customers.CustomerId")),
         description="The customer identifier",
     )
     invoice_date: datetime = Field(sa_column=Column("InvoiceDate", DateTime))
@@ -79,6 +79,16 @@ class InvoiceRead(InvoiceBase):
     customer_id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# Update operation (Put)
+class InvoiceUpdate(InvoiceBase):
+    name: str | None = Field(default=None)
+
+
+# Patch operation
+class InvoicePatch(InvoiceBase):
+    name: Optional[str] = Field(default=None)
 
 
 # Read with relationships
