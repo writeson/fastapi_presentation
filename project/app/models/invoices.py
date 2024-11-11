@@ -1,8 +1,8 @@
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from decimal import Decimal
 from sqlalchemy import Column, Integer, DateTime, String, Numeric, ForeignKey
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 from pydantic import ConfigDict
 
 
@@ -65,6 +65,9 @@ class Invoice(InvoiceBase, table=True):
     )
     total: Decimal = Field(sa_column=Column("Total", Numeric(10, 2)))
 
+    # Add this relationship to link to InvoiceItems
+    invoice_items: List["InvoiceItem"] = Relationship(back_populates="invoice")
+
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -78,7 +81,9 @@ class InvoiceRead(InvoiceBase):
     id: int
     customer_id: int
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True, json_encoders={Decimal: lambda v: float(v)}
+    )
 
 
 # Update operation (Put)
@@ -89,6 +94,9 @@ class InvoiceUpdate(InvoiceBase):
 # Patch operation
 class InvoicePatch(InvoiceBase):
     name: Optional[str] = Field(default=None)
+
+
+from .invoice_items import InvoiceItem  # noqa: E402
 
 
 # Read with relationships

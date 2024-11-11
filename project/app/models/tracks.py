@@ -93,7 +93,7 @@ class Track(TrackBase, table=True):
     album: Optional["Album"] = Relationship(back_populates="tracks")  # noqa: F821
     genre: Optional["Genre"] = Relationship(back_populates="tracks")  # noqa: F821
     media_type: Optional["MediaType"] = Relationship(back_populates="tracks")  # noqa: F821
-    # invoice_items: List["InvoiceItems"] = Relationship(back_populates="tracks")
+    invoice_items: List["InvoiceItem"] = Relationship(back_populates="track")
 
     __table_args__ = (
         Index("IFK_TrackAlbumId", "AlbumId"),
@@ -142,3 +142,4 @@ class TrackPatch(TrackBase):
 from .genres import GenreRead  # noqa: E402
 from .media_types import MediaTypeRead  # noqa: E402
 from .playlists import Playlist, PlaylistRead  # noqa: E402
+from .invoice_items import InvoiceItem  # noqa: E402

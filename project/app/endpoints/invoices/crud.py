@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload
+
+# from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from project.app.models.invoices import (
@@ -29,10 +30,7 @@ async def read_invoice(session: AsyncSession, id: int) -> InvoiceRead:
     Retrieve a Invoice from the database by ID.
     Returns the InvoiceRead model if found, None otherwise.
     """
-    query = (
-        select(Invoice)
-        .where(Invoice.id == id)
-    )
+    query = select(Invoice).where(Invoice.id == id)
     result = await session.execute(query)
     db_invoice = result.unique().scalar_one_or_none()
     if db_invoice is None:
@@ -47,11 +45,7 @@ async def read_invoices(
     Retrieve all Invoice from the database.
     Returns a list of InvoiceRead models.
     """
-    query = (
-        select(Invoice)
-        .offset(offset)
-        .limit(limit)
-    )
+    query = select(Invoice).offset(offset).limit(limit)
     result = await session.execute(query)
     db_invoices = result.scalars().all()
     return [InvoiceRead.model_validate(db_invoice) for db_invoice in db_invoices]

@@ -13,12 +13,12 @@ from project.app.models.tracks import (
 )
 
 
-async def create_track(session: AsyncSession, album: TrackCreate) -> TrackRead:
+async def create_track(session: AsyncSession, track: TrackCreate) -> TrackRead:
     """
     Create a new Track in the database from the passed in TrackCreate model.
     Returns the created TrackRead model.
     """
-    db_track = Track(title=album.title)
+    db_track = Track(title=track.title)
     session.add(db_track)
     await session.commit()
     await session.refresh(db_track)
