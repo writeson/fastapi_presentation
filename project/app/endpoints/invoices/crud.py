@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy import select
 
-# from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from project.app.models.invoices import (
@@ -10,6 +10,7 @@ from project.app.models.invoices import (
     InvoiceRead,
     InvoiceUpdate,
     InvoicePatch,
+    InvoiceReadWithInvoiceItems,
 )
 
 
@@ -25,6 +26,19 @@ async def create_invoice(session: AsyncSession, album: InvoiceCreate) -> Invoice
     return InvoiceRead.model_validate(db_invoice)
 
 
+async def read_invoices(
+        session: AsyncSession, offset: int = 0, limit: int = 10
+) -> list[InvoiceRead]:
+    """
+    Retrieve all Invoice from the database.
+    Returns a list of InvoiceRead models.
+    """
+    query = select(Invoice).offset(offset).limit(limit)
+    result = await session.execute(query)
+    db_invoices = result.scalars().all()
+    return [InvoiceRead.model_validate(db_invoice) for db_invoice in db_invoices]
+
+
 async def read_invoice(session: AsyncSession, id: int) -> InvoiceRead:
     """
     Retrieve a Invoice from the database by ID.
@@ -38,17 +52,21 @@ async def read_invoice(session: AsyncSession, id: int) -> InvoiceRead:
     return db_invoice
 
 
-async def read_invoices(
-    session: AsyncSession, offset: int = 0, limit: int = 10
-) -> list[InvoiceRead]:
-    """
-    Retrieve all Invoice from the database.
-    Returns a list of InvoiceRead models.
-    """
-    query = select(Invoice).offset(offset).limit(limit)
+async def read_invoice_with_invoice_items(
+        session: AsyncSession, id: int
+) -> InvoiceReadWithInvoiceItems:
+    query = (
+        select(Invoice)
+        .options(
+            joinedload(Invoice.invoice_items),
+        )
+        .where(Invoice.id == id)
+    )
     result = await session.execute(query)
-    db_invoices = result.scalars().all()
-    return [InvoiceRead.model_validate(db_invoice) for db_invoice in db_invoices]
+    db_invoice = result.unique().scalar_one_or_none()
+    if db_invoice is None:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    return InvoiceReadWithInvoiceItems.model_validate(db_invoice)
 
 
 async def update_invoice(

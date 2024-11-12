@@ -86,6 +86,16 @@ class InvoiceRead(InvoiceBase):
     )
 
 
+class InvoiceReadWithInvoiceItems(InvoiceBase):
+    id: int
+    customer_id: int
+    invoice_items: List["InvoiceItemRead"] = Field(default_factory=list)
+
+    model_config = ConfigDict(
+        from_attributes=True, json_encoders={Decimal: lambda v: float(v)}
+    )
+
+
 # Update operation (Put)
 class InvoiceUpdate(InvoiceBase):
     name: str | None = Field(default=None)
@@ -98,6 +108,8 @@ class InvoicePatch(InvoiceBase):
 
 from .invoice_items import InvoiceItem  # noqa: E402
 
+
+from .invoice_items import InvoiceItemRead  # noqa: E402
 
 # Read with relationships
 # class InvoiceReadWithCustomer(InvoiceRead):

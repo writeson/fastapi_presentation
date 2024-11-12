@@ -2,6 +2,7 @@ from project.app.models.invoices import (
     Invoice,  # noqa: F401
     InvoiceCreate,
     InvoiceRead,
+    InvoiceReadWithInvoiceItems,
     InvoiceUpdate,
     InvoicePatch,
 )
@@ -45,6 +46,18 @@ async def read_invoice(
         db_invoice = await invoice_crud.read_invoice(session=session, id=id)
         if db_invoice is None:
             raise HTTPException(status_code=404, detail="Invoice not found")
+        return db_invoice
+
+
+@router.get("/{id}/invoice_items", response_model=InvoiceReadWithInvoiceItems)
+async def read_invoice_with_invoice_items(
+        id: int = Path(..., title="The ID of the artist to get"),
+        db: AsyncSession = Depends(get_db),
+):
+    async with db as session:
+        db_invoice = await invoice_crud.read_invoice_with_invoice_items(session=session, id=id)
+        if db_invoice is None:
+            raise HTTPException(status_code=404, detail="Track not found")
         return db_invoice
 
 
