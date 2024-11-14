@@ -24,12 +24,14 @@ from endpoints.media_types.routes import router as media_types_router
 from endpoints.playlists.routes import router as playlists_router
 from endpoints.invoices.routes import router as invoices_router
 from endpoints.invoice_items.routes import router as invoice_items_router
+from endpoints.customers.routes import router as customers_router
+from endpoints.employees.routes import router as employees_router
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from middleware import log_middleware
+from middleware import log_middleware, MetadataMiddleware
 from logger import log_config
 
 logger = getLogger()
@@ -78,6 +80,7 @@ def app_factory():
         allow_headers=["*"],
     )
     fastapi_app.add_middleware(BaseHTTPMiddleware, dispatch=log_middleware)
+    fastapi_app.add_middleware(MetadataMiddleware)    
 
     # add all the endpoint routers
     fastapi_app.include_router(artists_router, prefix="/api/v1")
@@ -88,6 +91,8 @@ def app_factory():
     fastapi_app.include_router(playlists_router, prefix="/api/v1")
     fastapi_app.include_router(invoices_router, prefix="/api/v1")
     fastapi_app.include_router(invoice_items_router, prefix="/api/v1")
+    fastapi_app.include_router(customers_router, prefix="/api/v1")
+    fastapi_app.include_router(employees_router, prefix="/api/v1")
     return fastapi_app
 
 
