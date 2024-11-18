@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from project.app.models.genres import (
@@ -40,14 +40,18 @@ async def read_genres(
     session: AsyncSession, offset: int = 0, limit: int = 10
 ) -> list[GenreRead]:
     """
-    Retrieve all Genres from the database.
-    Returns a list of GenreRead models.
+    Returns a list of GenreRead models and the total count of genres in the database.
     """
+    # Query for paginated results
     query = select(Genre).offset(offset).limit(limit)
     result = await session.execute(query)
     db_genres = result.scalars().all()
-    return [GenreRead.model_validate(db_genre) for db_genre in db_genres]
 
+    # Query for total count
+    count_query = select(func.count()).select_from(Genre)
+    total_count = await session.scalar(count_query)
+
+    return [GenreRead.model_validate(db_genre) for db_genre in db_genres], total_count
 
 async def update_genre(session: AsyncSession, id: int, genre: GenreUpdate) -> GenreRead:
     """

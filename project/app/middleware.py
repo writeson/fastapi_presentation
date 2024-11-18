@@ -4,18 +4,26 @@ information about every request the application
 handles
 """
 
+import json
 from logging import getLogger
+from typing import List, Dict
+from http import HTTPStatus
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi.responses import JSONResponse
-from starlette.middleware.base import RequestResponseEndpoint
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy.orm import sessionmaker
-from sqlmodel.ext.asyncio.session import AsyncSession as SQLModelAsyncSession
-from project.app.models.genres import Genre  # Replace with the actual module where Genre is defined
+from starlette.responses import Response
+from starlette.concurrency import iterate_in_threadpool
 
+from project.app.models.metadata import (
+    MetaDataCreate,
+    MetaDataReadAll,
+    MetaDataReadOne,
+    MetaDataUpdate,
+    MetaDataPatch,
+    MetaDataDelete
+)
+
+from http import HTTPStatus
 
 logger = getLogger()
 
@@ -35,52 +43,71 @@ async def log_middleware(request: Request, call_next):
     return response
 
 
-# Middleware to wrap responses
 class MetadataMiddleware(BaseHTTPMiddleware):
-    async def dispatch(
-            self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
-        # Extract offset and limit from query parameters
-        offset = int(request.query_params.get("offset", 0))
-        limit = int(request.query_params.get("limit", 10))
+    async def dispatch(self, request: Request, call_next):
+        # Get the response from the route handler
+        response = response_1 = await call_next(request)
 
-        # Call the next middleware or endpoint
-        response = await call_next(request)
+        # Get the response body
+        response_body = [section async for section in response.body_iterator]
+        response.body_iterator = iterate_in_threadpool(response_body)
 
-        if hasattr(response, "body"):
-            body = response.body
-        else:
-            body = await response.body()
-            
-        print(f"{body =}")
+        # Modify the response
+        # Add a custom header
 
-        # If response is JSON, wrap it with metadata
-        if isinstance(response, JSONResponse):
-            # Extract the total records count (you'll need a database session for this)
-            db_session: SQLModelAsyncSession = request.state.db  # Assuming db is stored in `request.state.db`
-            total_records = await self.get_total_genres_count(db_session)
+        # If you need to modify JSON response data
+        if response.headers.get("content-type") == "application/json":
+            # Decode the response body
+            body = response_body[0].decode()
+            data = json.loads(body)
 
-            # Build metadata object
-            metadata = {
-                "status": response.status_code,
-                "offset": offset,
-                "limit": limit,
-                "total_records": total_records,
-            }
+            # Modify the response
+            data = build_response_data(request, response, data)
 
-            # Wrap the response JSON with metadata
-            original_data = response.body
-            response_data = {
-                "metadata": metadata,
-                "data": response.json(),
-            }
-
-            # Return the new JSON response
-            response = JSONResponse(content=response_data, status_code=response.status_code)
+            # Create new response with modified data
+            response = Response(
+                content=json.dumps(data),
+                status_code=response.status_code,
+                headers=dict(response.headers),
+                media_type="application/json"
+            )
 
         return response
     
+    
+def build_response_data(request: Request, response: Response, data: Dict) -> Dict:
+    """
+    Build a response based on the request and data
+    """
+    match request:
 
-    async def get_total_genres_count(self, db_session: AsyncSession) -> int:
-        result = await db_session.execute(select(Genre))
-        return len(result.scalars().all())
+        case Request(method="POST"):
+            data["status"] = "ok"
+
+        case Request(method="GET") if "response" in data and isinstance(data["response"], List):
+            data = {
+                "metadata": MetaDataReadAll(
+                    status_code=response.status_code,
+                    message=HTTPStatus(response.status_code).description,
+                    offset=data.get("offset", 0),
+                    limit=data.get("limit", 0),
+                    total_count=data.get("total_count", 0)
+                ).dict(),
+                "response": data["response"]
+            }
+            return data
+
+        case Request(method="GET") if isinstance(data, Dict):
+            data["status"] = "ok"
+
+        case Request(method="PUT"):
+            data["status"] = "ok"
+
+        case Request(method="PATCH"):
+            data["status"] = "ok"
+
+        case Request(method="DELETE"):
+            data["status"] = "ok"
+
+        case _:
+            pass

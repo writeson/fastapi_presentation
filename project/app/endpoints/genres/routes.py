@@ -1,3 +1,6 @@
+
+import sys
+
 from fastapi import APIRouter, Depends, Path, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -6,6 +9,7 @@ from project.app.endpoints.genres import crud as genre_crud
 from project.app.models.genres import (
     GenreCreate,
     GenreRead,
+    PaginatedGenreResponse,
     GenreUpdate,
     GenrePatch,
 )
@@ -25,13 +29,22 @@ async def create_genre(genre: GenreCreate, db: AsyncSession = Depends(get_db)):
         return await genre_crud.create_genre(session=session, genre=genre)
 
 
-@router.get("/", response_model=list[GenreRead])
+@router.get("/", response_model=PaginatedGenreResponse)
 async def read_genres(
-    offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)
+        offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)
 ):
     async with db as session:
-        return await genre_crud.read_genres(session=session, offset=offset, limit=limit)
-
+        genres, total_count = await genre_crud.read_genres(
+            session=session,
+            offset=offset,
+            limit=limit
+        )
+        return PaginatedGenreResponse(
+            response=[GenreRead.model_validate(genre) for genre in genres],
+            total_count=total_count,
+            offset=offset,
+            limit=limit
+        )
 
 @router.get("/{id}", response_model=GenreRead)
 async def read_genre(

@@ -40,6 +40,14 @@ class GenreRead(GenreBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+# Create a new Pydantic model for the paginated response
+class PaginatedGenreResponse(SQLModel):
+    response: list[GenreRead]
+    total_count: int
+    offset: int
+    limit: int    
+
+
 class GenreReadWithTracks(GenreBase):
     id: int
     tracks: List["Track"] = []
