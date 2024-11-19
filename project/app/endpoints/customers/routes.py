@@ -44,6 +44,18 @@ async def read_customer(
         return db_customer
 
 
+# @router.get("/{id}/invoices", response_model=CustomerRead)
+# async def read_customer(
+#         id: int = Path(..., title="The ID of the artist to get"),
+#         db: AsyncSession = Depends(get_db),
+# ):
+#     async with db as session:
+#         db_customer = await customer_crud.read_customer(session=session, id=id)
+#         if db_customer is None:
+#             raise HTTPException(status_code=404, detail="Customer not found")
+#         return db_customer
+
+
 @router.put("/{id}", response_model=CustomerRead)
 async def update_customer(
     customer: CustomerUpdate,

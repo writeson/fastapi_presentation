@@ -20,7 +20,6 @@ from project.app.models.metadata import (
     MetaDataReadOne,
     MetaDataUpdate,
     MetaDataPatch,
-    MetaDataDelete
 )
 
 from http import HTTPStatus
@@ -45,31 +44,41 @@ async def log_middleware(request: Request, call_next):
 
 class MetadataMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
+        # Skip modification for OpenAPI schema requests
+        if request.url.path == "/openapi.json":
+            return await call_next(request)
+
         # Get the response from the route handler
-        response = response_1 = await call_next(request)
+        original_response = await call_next(request)
 
-        # Get the response body
-        response_body = [section async for section in response.body_iterator]
-        response.body_iterator = iterate_in_threadpool(response_body)
+        # Extract the response body
+        response_body = b"".join([section async for section in original_response.body_iterator])
 
-        # Modify the response
-        # Add a custom header
+        # Modify the response if it is JSON
+        if original_response.headers.get("content-type") == "application/json":
+            # Decode the JSON response body
+            data = json.loads(response_body.decode())
 
-        # If you need to modify JSON response data
-        if response.headers.get("content-type") == "application/json":
-            # Decode the response body
-            body = response_body[0].decode()
-            data = json.loads(body)
+            # Modify the JSON data
+            data = build_response_data(request, original_response, data)
 
-            # Modify the response
-            data = build_response_data(request, response, data)
-
-            # Create new response with modified data
+            # Create a new JSON response with updated content
             response = Response(
                 content=json.dumps(data),
-                status_code=response.status_code,
-                headers=dict(response.headers),
-                media_type="application/json"
+                status_code=original_response.status_code,
+                headers=dict(original_response.headers),
+                media_type="application/json",
+            )
+
+            # Update the Content-Length header for the modified JSON response
+            response.headers["Content-Length"] = str(len(response.body))
+        else:
+            # If not JSON, pass through the original response
+            response = Response(
+                content=response_body,
+                status_code=original_response.status_code,
+                headers=dict(original_response.headers),
+                media_type=original_response.media_type,
             )
 
         return response
@@ -86,7 +95,7 @@ def build_response_data(request: Request, response: Response, data: Dict) -> Dic
 
         case Request(method="GET") if "response" in data and isinstance(data["response"], List):
             data = {
-                "metadata": MetaDataReadAll(
+                "meta_data": MetaDataReadAll(
                     status_code=response.status_code,
                     message=HTTPStatus(response.status_code).description,
                     offset=data.get("offset", 0),
@@ -98,7 +107,14 @@ def build_response_data(request: Request, response: Response, data: Dict) -> Dic
             return data
 
         case Request(method="GET") if isinstance(data, Dict):
-            data["status"] = "ok"
+            data = {
+                "meta_data": MetaDataReadOne(
+                    status_code=response.status_code,
+                    message=HTTPStatus(response.status_code).description,
+                ).dict(),
+                "response": data
+            }
+            return data
 
         case Request(method="PUT"):
             data["status"] = "ok"
