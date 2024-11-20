@@ -9,20 +9,9 @@ from logging import getLogger
 from typing import List, Dict
 from http import HTTPStatus
 
-from fastapi import Request, Response
+from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
-from starlette.concurrency import iterate_in_threadpool
-
-from project.app.models.metadata import (
-    MetaDataCreate,
-    MetaDataReadAll,
-    MetaDataReadOne,
-    MetaDataUpdate,
-    MetaDataPatch,
-)
-
-from http import HTTPStatus
 
 logger = getLogger()
 
@@ -52,7 +41,9 @@ class MetadataMiddleware(BaseHTTPMiddleware):
         original_response = await call_next(request)
 
         # Extract the response body
-        response_body = b"".join([section async for section in original_response.body_iterator])
+        response_body = b"".join(
+            [section async for section in original_response.body_iterator]
+        )
 
         # Modify the response if it is JSON
         if original_response.headers.get("content-type") == "application/json":
@@ -82,37 +73,36 @@ class MetadataMiddleware(BaseHTTPMiddleware):
             )
 
         return response
-    
-    
-def build_response_data(request: Request, response: Response, data: Dict) -> Dict:
+
+
+def build_response_data(
+    request: Request, original_response: Response, data: Dict
+) -> Dict:
     """
     Build a response based on the request and data
     """
     match request:
-
         case Request(method="POST"):
             data["status"] = "ok"
 
-        case Request(method="GET") if "response" in data and isinstance(data["response"], List):
-            data = {
-                "meta_data": MetaDataReadAll(
-                    status_code=response.status_code,
-                    message=HTTPStatus(response.status_code).description,
-                    offset=data.get("offset", 0),
-                    limit=data.get("limit", 0),
-                    total_count=data.get("total_count", 0)
-                ).dict(),
-                "response": data["response"]
+        case Request(method="GET") if "response" in data and isinstance(
+            data["response"], List
+        ):
+            data["meta_data"] = {
+                "status_code": original_response.status_code,
+                "message": HTTPStatus(original_response.status_code).description,
+                "offset": data.get("offset", 0),
+                "limit": data.get("limit", 0),
+                "total_count": data.get("total_count", 0),
             }
             return data
 
         case Request(method="GET") if isinstance(data, Dict):
             data = {
-                "meta_data": MetaDataReadOne(
-                    status_code=response.status_code,
-                    message=HTTPStatus(response.status_code).description,
-                ).dict(),
-                "response": data
+                "meta_data": {
+                    "status_code": original_response.status_code,
+                    "message": HTTPStatus(original_response.status_code).description,
+                }
             }
             return data
 

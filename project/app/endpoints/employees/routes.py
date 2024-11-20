@@ -29,7 +29,9 @@ async def read_employees(
     offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)
 ):
     async with db as session:
-        return await employee_crud.read_employees(session=session, offset=offset, limit=limit)
+        return await employee_crud.read_employees(
+            session=session, offset=offset, limit=limit
+        )
 
 
 @router.get("/{id}", response_model=EmployeeRead)
@@ -51,7 +53,9 @@ async def update_employee(
     db: AsyncSession = Depends(get_db),
 ):
     async with db as session:
-        db_employee = await employee_crud.update_employee(session=session, id=id, employee=employee)
+        db_employee = await employee_crud.update_employee(
+            session=session, id=id, employee=employee
+        )
         if db_employee is None:
             raise HTTPException(status_code=404, detail="Employee not found")
         return db_employee
@@ -64,7 +68,9 @@ async def patch_employee(
     db: AsyncSession = Depends(get_db),
 ):
     async with db as session:
-        db_employee = await employee_crud.patch_employee(session=session, id=id, employee=employee)
+        db_employee = await employee_crud.patch_employee(
+            session=session, id=id, employee=employee
+        )
         if db_employee is None:
             raise HTTPException(status_code=404, detail="Employee not found")
         return db_employee

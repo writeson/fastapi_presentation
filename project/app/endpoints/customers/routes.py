@@ -29,7 +29,9 @@ async def read_customers(
     offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)
 ):
     async with db as session:
-        return await customer_crud.read_customers(session=session, offset=offset, limit=limit)
+        return await customer_crud.read_customers(
+            session=session, offset=offset, limit=limit
+        )
 
 
 @router.get("/{id}", response_model=CustomerRead)
@@ -63,7 +65,9 @@ async def update_customer(
     db: AsyncSession = Depends(get_db),
 ):
     async with db as session:
-        db_customer = await customer_crud.update_customer(session=session, id=id, customer=customer)
+        db_customer = await customer_crud.update_customer(
+            session=session, id=id, customer=customer
+        )
         if db_customer is None:
             raise HTTPException(status_code=404, detail="Customer not found")
         return db_customer
@@ -76,7 +80,9 @@ async def patch_customer(
     db: AsyncSession = Depends(get_db),
 ):
     async with db as session:
-        db_customer = await customer_crud.patch_customer(session=session, id=id, customer=customer)
+        db_customer = await customer_crud.patch_customer(
+            session=session, id=id, customer=customer
+        )
         if db_customer is None:
             raise HTTPException(status_code=404, detail="Customer not found")
         return db_customer

@@ -53,6 +53,7 @@ async def read_genres(
 
     return [GenreRead.model_validate(db_genre) for db_genre in db_genres], total_count
 
+
 async def update_genre(session: AsyncSession, id: int, genre: GenreUpdate) -> GenreRead:
     """
     Update an existing Genre in the database using the passed in GenreUpdate model.

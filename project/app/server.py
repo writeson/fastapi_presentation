@@ -80,7 +80,7 @@ def app_factory():
         allow_headers=["*"],
     )
     fastapi_app.add_middleware(BaseHTTPMiddleware, dispatch=log_middleware)
-    fastapi_app.add_middleware(MetadataMiddleware)    
+    fastapi_app.add_middleware(MetadataMiddleware)
 
     # add all the endpoint routers
     fastapi_app.include_router(artists_router, prefix="/api/v1")

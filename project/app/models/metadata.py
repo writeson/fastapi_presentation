@@ -15,18 +15,19 @@ T = TypeVar("T")
 class MetaData(BaseModel):
     status_code: int = 200
     message: str = ""
-    
-    
+
+
 class MetaDataBaseResponse(Generic[T], BaseModel):
     meta_data: MetaData
     response: T
-    
-    
+
+
 class MetaDataCreate(MetaData):
     location: Optional[str] = ""
-    
-    
-class MetaDataReadAll(MetaData):
+
+
+class MetaDataReadAll(Generic[T], MetaData):
+    response: List[T]
     total_count: Optional[int]
     offset: Optional[int]
     limit: Optional[int]
@@ -34,6 +35,7 @@ class MetaDataReadAll(MetaData):
 
 class MetaDataReadOne(MetaData):
     pass
+
 
 class MetaDataUpdate(MetaData):
     location: Optional[str] = ""
@@ -44,5 +46,4 @@ class MetaDataPatch(MetaData):
 
 
 # class MetaDataDelete(MetaData):
-#     pass    
-    
+#     pass

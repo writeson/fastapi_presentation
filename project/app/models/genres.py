@@ -46,7 +46,7 @@ class PaginatedGenreResponse(SQLModel):
     response: list[GenreRead]
     total_count: int
     offset: int
-    limit: int    
+    limit: int
 
 
 class GenreReadWithTracks(GenreBase):
@@ -73,7 +73,7 @@ class GenrePatch(GenreBase):
 
 
 from .tracks import Track  # noqa: E402
-from .metadata import (
+from .metadata import (  # noqa: E402
     MetaDataCreate,
     MetaDataReadAll,
     MetaDataReadOne,

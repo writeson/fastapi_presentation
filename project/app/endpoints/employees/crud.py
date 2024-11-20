@@ -1,6 +1,5 @@
 from fastapi import HTTPException
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from project.app.models.employees import (
@@ -12,7 +11,9 @@ from project.app.models.employees import (
 )
 
 
-async def create_employee(session: AsyncSession, employee: EmployeeCreate) -> EmployeeRead:
+async def create_employee(
+    session: AsyncSession, employee: EmployeeCreate
+) -> EmployeeRead:
     """
     Create a new Employee in the database from the passed in EmployeeCreate model.
     Returns the created EmployeeRead model.
@@ -29,10 +30,7 @@ async def read_employee(session: AsyncSession, id: int) -> EmployeeRead:
     Retrieve a Employee from the database by ID.
     Returns the EmployeeRead model if found, None otherwise.
     """
-    query = (
-        select(Employee)
-        .where(Employee.id == id)
-    )
+    query = select(Employee).where(Employee.id == id)
     result = await session.execute(query)
     db_employee = result.unique().scalar_one_or_none()
     if db_employee is None:
@@ -47,17 +45,15 @@ async def read_employees(
     Retrieve all Employee from the database.
     Returns a list of EmployeeRead models.
     """
-    query = (
-        select(Employee)
-        .offset(offset)
-        .limit(limit)
-    )
+    query = select(Employee).offset(offset).limit(limit)
     result = await session.execute(query)
     db_employees = result.scalars().all()
     return [EmployeeRead.model_validate(db_employee) for db_employee in db_employees]
 
 
-async def update_employee(session: AsyncSession, id: int, album: EmployeeUpdate) -> EmployeeRead:
+async def update_employee(
+    session: AsyncSession, id: int, album: EmployeeUpdate
+) -> EmployeeRead:
     """
     Update an existing Employee in the database using the passed in EmployeeUpdate model.
     Returns the updated EmployeeRead model if found, None otherwise.
@@ -74,7 +70,9 @@ async def update_employee(session: AsyncSession, id: int, album: EmployeeUpdate)
     return EmployeeRead.model_validate(db_employee)
 
 
-async def patch_employee(session: AsyncSession, id: int, album: EmployeePatch) -> EmployeeRead:
+async def patch_employee(
+    session: AsyncSession, id: int, album: EmployeePatch
+) -> EmployeeRead:
     """
     Partially update an existing Employee in the database using the passed in EmployeePatch model.
     Returns the updated EmployeeRead model if found, None otherwise.

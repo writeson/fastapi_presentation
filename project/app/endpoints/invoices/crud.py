@@ -27,7 +27,7 @@ async def create_invoice(session: AsyncSession, album: InvoiceCreate) -> Invoice
 
 
 async def read_invoices(
-        session: AsyncSession, offset: int = 0, limit: int = 10
+    session: AsyncSession, offset: int = 0, limit: int = 10
 ) -> list[InvoiceRead]:
     """
     Retrieve all Invoice from the database.
@@ -53,7 +53,7 @@ async def read_invoice(session: AsyncSession, id: int) -> InvoiceRead:
 
 
 async def read_invoice_with_invoice_items(
-        session: AsyncSession, id: int
+    session: AsyncSession, id: int
 ) -> InvoiceReadWithInvoiceItems:
     query = (
         select(Invoice)
