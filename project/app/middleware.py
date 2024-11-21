@@ -6,14 +6,12 @@ handles
 
 import json
 from logging import getLogger
-from typing import List, Dict, Union, Any
+from typing import List, Dict
 from http import HTTPStatus
+from urllib.parse import parse_qs
 
-from fastapi import FastAPI, Request, Response
-from fastapi.responses import JSONResponse
+from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.types import Message
-
 
 
 logger = getLogger()
@@ -34,7 +32,7 @@ async def log_middleware(request: Request, call_next):
     return response
 
 
-class MetadataMiddleware_1(BaseHTTPMiddleware):
+class MetadataMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Skip modification for OpenAPI schema requests
         if request.url.path == "/openapi.json":
@@ -46,10 +44,12 @@ class MetadataMiddleware_1(BaseHTTPMiddleware):
         # Modify the response if it is JSON
         if original_response.headers.get("content-type") == "application/json":
             # Extract the response body
-            response_body = [section async for section in original_response.body_iterator]
+            response_body = [
+                section async for section in original_response.body_iterator
+            ]
             # Decode the JSON response body
             decoded_body = b"".join(response_body).decode()
-     
+
             # parse the JSON response body
             try:
                 data = json.loads(decoded_body)
@@ -94,12 +94,14 @@ def build_response_data(
         case Request(method="GET") if "response" in data and isinstance(
             data["response"], List
         ):
+            query_string = request.scope.get("query_string", b"").decode()
+            query_params = parse_qs(query_string)
             data["meta_data"] = {
                 "status_code": original_response.status_code,
                 "message": HTTPStatus(original_response.status_code).description,
-                "offset": data.get("offset", 0),
-                "limit": data.get("limit", 0),
-                "total_count": data.get("total_count", 0),
+                "offset": query_params["offset"][0],
+                "limit": query_params["limit"][0],
+                "total_count": data.pop("total_count", 0),
             }
             return data
 
@@ -123,76 +125,3 @@ def build_response_data(
 
         case _:
             pass
-
-
-
-
-class MetadataMiddleware(BaseHTTPMiddleware):
-    async def set_body(self, request: Request):
-        receive_ = await request._receive()
-
-        async def receive() -> Message:
-            return receive_
-
-        request._receive = receive
-
-    async def get_response_body(self, response: Response) -> Dict[Any, Any]:
-        body = b""
-        async for chunk in response.body_iterator:
-            body += chunk
-        return json.loads(body)
-
-    async def dispatch(self, request: Request, call_next) -> Response:
-        try:
-            # Skip modification for OpenAPI schema requests
-            if request.url.path == "/openapi.json":
-                return await call_next(request)
-            
-            # Get the original response
-            response = await call_next(request)
-
-            # Only process JSON responses
-            if not isinstance(response, JSONResponse):
-                return response
-
-            # Get the response body
-            body = await self.get_response_body(response)
-
-            # If the response is already in the MetaData format, return as is
-            if isinstance(body, dict) and "meta_data" in body and "response" in body:
-                return JSONResponse(
-                    content=body,
-                    status_code=response.status_code,
-                    headers=dict(response.headers)
-                )
-
-            # Create new response with MetaData
-            new_response = {
-                "meta_data": {
-                    "status_code": response.status_code,
-                    "message": getattr(response, "message", "")
-                },
-                "response": body
-            }
-
-            return JSONResponse(
-                content=new_response,
-                status_code=response.status_code,
-                headers=dict(response.headers)
-            )
-
-        except Exception as e:
-            # Handle errors by returning them in the MetaData format
-            error_response = {
-                "meta_data": {
-                    "status_code": 500,
-                    "message": str(e)
-                },
-                "response": None
-            }
-            return JSONResponse(content=error_response, status_code=500)
-
-# Example usage function
-def add_metadata_middleware(app: FastAPI) -> None:
-    """Add the MetaData middleware to a FastAPI application."""
-    app.add_middleware(MetadataMiddleware)

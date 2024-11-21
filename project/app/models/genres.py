@@ -75,7 +75,6 @@ class GenrePatch(GenreBase):
 from .tracks import Track  # noqa: E402
 from .metadata import (  # noqa: E402
     MetaDataCreate,
-    MetaDataReadAll,
     MetaDataReadOne,
     MetaDataUpdate,
     MetaDataPatch,

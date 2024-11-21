@@ -1,5 +1,3 @@
-from typing import List
-
 from fastapi import APIRouter, Depends, Path, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -41,7 +39,7 @@ async def read_genres(
         )
         try:
             retval = MetaDataReadAll(
-                meta_data = MetaData(),
+                meta_data=MetaData(),
                 response=genres,
                 total_count=total_count,
             )
