@@ -41,12 +41,12 @@ class GenreRead(GenreBase):
 
 
 # Create a new Pydantic model for the paginated response
-class PaginatedGenreResponse(SQLModel):
-    meta_data: Optional["MetaDataReadAll"]
-    response: list[GenreRead]
-    total_count: int
-    offset: int
-    limit: int
+# class PaginatedGenreResponse(SQLModel):
+#     meta_data: Optional["MetaDataReadAll"]
+#     response: list[GenreRead]
+#     total_count: int
+#     offset: int
+#     limit: int
 
 
 class GenreReadWithTracks(GenreBase):

@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 
 T = TypeVar("T")
+U = TypeVar("U")
 
 
 class MetaData(BaseModel):
@@ -17,20 +18,19 @@ class MetaData(BaseModel):
     message: str = ""
 
 
-class MetaDataBaseResponse(Generic[T], BaseModel):
+class MetaDataBaseResponse(BaseModel, Generic[T]):
     meta_data: MetaData
     response: T
 
 
-class MetaDataCreate(MetaData):
+class MetaDataCreate(MetaData, Generic[T]):
     location: Optional[str] = ""
 
 
-class MetaDataReadAll(Generic[T], MetaData):
+class MetaDataReadAll(BaseModel, Generic[T, U]):
+    meta_data: MetaData
     response: List[T]
-    total_count: Optional[int]
-    offset: Optional[int]
-    limit: Optional[int]
+    total_count: U
 
 
 class MetaDataReadOne(MetaData):

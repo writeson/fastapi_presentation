@@ -40,15 +40,18 @@ class MetadataMiddleware(BaseHTTPMiddleware):
         # Get the response from the route handler
         original_response = await call_next(request)
 
-        # Extract the response body
-        response_body = b"".join(
-            [section async for section in original_response.body_iterator]
-        )
-
         # Modify the response if it is JSON
         if original_response.headers.get("content-type") == "application/json":
+            # Extract the response body
+            response_body = [section async for section in original_response.body_iterator]
             # Decode the JSON response body
-            data = json.loads(response_body.decode())
+            decoded_body = b"".join(response_body).decode()
+     
+            # parse the JSON response body
+            try:
+                data = json.loads(decoded_body)
+            except json.JSONDecodeError:
+                return original_response
 
             # Modify the JSON data
             data = build_response_data(request, original_response, data)

@@ -5,7 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from project.app.database import get_db
 from project.app.endpoints.genres import crud as genre_crud
-from project.app.models.metadata import MetaDataReadAll
+from project.app.models.metadata import (
+    MetaData,
+    MetaDataReadAll,
+)
 from project.app.models.genres import (
     GenreCreate,
     GenreRead,
@@ -28,7 +31,7 @@ async def create_genre(genre: GenreCreate, db: AsyncSession = Depends(get_db)):
         return await genre_crud.create_genre(session=session, genre=genre)
 
 
-@router.get("/", response_model=MetaDataReadAll[List[GenreRead]])
+@router.get("/", response_model=MetaDataReadAll[List[GenreRead], int])
 async def read_genres(
     offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)
 ):
@@ -36,11 +39,10 @@ async def read_genres(
         genres, total_count = await genre_crud.read_genres(
             session=session, offset=offset, limit=limit
         )
-        retval = MetaDataReadAll(
+        retval = MetaDataReadAll[List[GenreRead], int](
+            meta_data = MetaData(),
             response=[GenreRead.model_validate(genre) for genre in genres],
             total_count=total_count,
-            offset=offset,
-            limit=limit,
         )
         return retval
 
