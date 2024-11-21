@@ -31,7 +31,7 @@ async def create_genre(genre: GenreCreate, db: AsyncSession = Depends(get_db)):
         return await genre_crud.create_genre(session=session, genre=genre)
 
 
-@router.get("/", response_model=MetaDataReadAll[List[GenreRead], int])
+@router.get("/", response_model=MetaDataReadAll[GenreRead, int])
 async def read_genres(
     offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)
 ):
@@ -39,12 +39,16 @@ async def read_genres(
         genres, total_count = await genre_crud.read_genres(
             session=session, offset=offset, limit=limit
         )
-        retval = MetaDataReadAll[List[GenreRead], int](
-            meta_data = MetaData(),
-            response=[GenreRead.model_validate(genre) for genre in genres],
-            total_count=total_count,
-        )
-        return retval
+        try:
+            retval = MetaDataReadAll(
+                meta_data = MetaData(),
+                response=genres,
+                total_count=total_count,
+            )
+            return retval
+        except Exception as e:
+            print(e)
+            raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/{id}", response_model=GenreRead)
