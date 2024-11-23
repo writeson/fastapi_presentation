@@ -4,33 +4,39 @@ is attached to every response by the `MetadataMiddleware`
 middleware. It contains the response data, status code, message
 and other information relevant to the response.
 """
-
-from typing import Optional, List, Generic, TypeVar
+from typing import Optional
 from pydantic import BaseModel
+from http import HTTPStatus
 
-
-T = TypeVar("T")
-U = TypeVar("U")
+from sqlmodel import Field
 
 
 class MetaData(BaseModel):
-    status_code: int = 200
-    message: str = ""
+    status_code: int = Field(
+        default=HTTPStatus.OK.value,
+        description="HTTP status code",
+    )
+    message: str = Field(
+        default=HTTPStatus(HTTPStatus.OK.value).description,
+        description="HTTP status message description",
+    )
 
 
-class MetaDataBaseResponse(BaseModel, Generic[T]):
-    meta_data: MetaData
-    response: T
+# class MetaDataBaseResponse(BaseModel, Generic[T]):
+#     meta_data: MetaData
+#     response: T
 
 
-class MetaDataCreate(MetaData, Generic[T]):
+class MetaDataCreate(MetaData):
     location: Optional[str] = ""
 
 
-class MetaDataReadAll(BaseModel, Generic[T, U]):
-    meta_data: MetaData
-    response: List[T]
-    total_count: U
+class MetaDataReadAll(MetaData):
+    page: int = Field(default=0, ge=0, description="Current page number")
+    page_count: int = Field(default=0, ge=0, description="Total number of pages")
+    offset: int = Field(default=0, ge=0, description="Offset value")
+    limit: int = Field(default=0, ge=0, description="Limit value")
+    total_count: int = Field(default=0, ge=0, description="Total number of records")
 
 
 class MetaDataReadOne(MetaData):

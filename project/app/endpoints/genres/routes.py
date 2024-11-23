@@ -1,8 +1,14 @@
+from typing import List
+
 from fastapi import APIRouter, Depends, Path, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from project.app.database import get_db
 from project.app.endpoints.genres import crud as genre_crud
+from project.app.models.combined import (
+    CombinedResponseReadAll,
+    CombinedResponseRead,
+)
 from project.app.models.metadata import (
     MetaData,
     MetaDataReadAll,
@@ -29,27 +35,21 @@ async def create_genre(genre: GenreCreate, db: AsyncSession = Depends(get_db)):
         return await genre_crud.create_genre(session=session, genre=genre)
 
 
-@router.get("/", response_model=MetaDataReadAll[GenreRead, int])
+@router.get("/", response_model=CombinedResponseReadAll[List[GenreRead], int])
 async def read_genres(
-    offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)
+        offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)
 ):
     async with db as session:
         genres, total_count = await genre_crud.read_genres(
             session=session, offset=offset, limit=limit
         )
-        try:
-            retval = MetaDataReadAll(
-                meta_data=MetaData(),
-                response=genres,
-                total_count=total_count,
-            )
-            return retval
-        except Exception as e:
-            print(e)
-            raise HTTPException(status_code=500, detail="Internal server error")
+        return CombinedResponseReadAll(
+            response=genres,
+            total_count=total_count,
+        )
 
 
-@router.get("/{id}", response_model=GenreRead)
+@router.get("/{id}", response_model=CombinedResponseRead[GenreRead])
 async def read_genre(
     id: int = Path(..., title="The ID of the genre to get"),
     db: AsyncSession = Depends(get_db),
@@ -58,7 +58,7 @@ async def read_genre(
         db_genre = await genre_crud.read_genre(session=session, id=id)
         if db_genre is None:
             raise HTTPException(status_code=404, detail="Genre not found")
-        return db_genre
+        return CombinedResponseRead(response=GenreRead.model_validate(db_genre))
 
 
 @router.put("/{id}", response_model=GenreRead)

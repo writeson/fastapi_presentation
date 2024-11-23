@@ -69,16 +69,9 @@ class MetadataMiddleware(BaseHTTPMiddleware):
 
             # Update the Content-Length header for the modified JSON response
             response.headers["Content-Length"] = str(len(response.body))
+            return response
         else:
-            # If not JSON, pass through the original response
-            response = Response(
-                content=response_body,
-                status_code=original_response.status_code,
-                headers=dict(original_response.headers),
-                media_type=original_response.media_type,
-            )
-
-        return response
+            return original_response
 
 
 def build_response_data(
@@ -105,12 +98,10 @@ def build_response_data(
             }
             return data
 
-        case Request(method="GET") if isinstance(data, Dict):
-            data = {
-                "meta_data": {
-                    "status_code": original_response.status_code,
-                    "message": HTTPStatus(original_response.status_code).description,
-                }
+        case Request(method="GET") if "response" in data and isinstance(data["response"], Dict):
+            data["meta_data"] = {
+                "status_code": original_response.status_code,
+                "message": HTTPStatus(original_response.status_code).description,
             }
             return data
 
