@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import HTTPException
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,7 +13,7 @@ from project.app.models.genres import (
 )
 
 
-async def create_genre(session: AsyncSession, genre: GenreCreate):
+async def create_genre(session: AsyncSession, genre: GenreCreate) -> GenreRead:
     """
     Create a new Genre in the database from the passed in GenreCreate model.
     Returns the created GenreRead model.
@@ -38,7 +40,7 @@ async def read_genre(session: AsyncSession, id: int) -> GenreRead:
 
 async def read_genres(
     session: AsyncSession, offset: int = 0, limit: int = 10
-) -> list[GenreRead]:
+) -> [List[GenreRead], int]:
     """
     Returns a list of GenreRead models and the total count of genres in the database.
     """
@@ -59,7 +61,9 @@ async def update_genre(session: AsyncSession, id: int, genre: GenreUpdate) -> Ge
     Update an existing Genre in the database using the passed in GenreUpdate model.
     Returns the updated GenreRead model if found, raises HTTPException otherwise.
     """
-    db_genre = await read_genre(session, id)
+    query = select(Genre).where(Genre.id == id)
+    result = await session.execute(query)
+    db_genre = result.scalar_one_or_none()
     if db_genre is None:
         raise HTTPException(status_code=404, detail="Genre not found")
 
@@ -76,7 +80,9 @@ async def patch_genre(session: AsyncSession, id: int, genre: GenrePatch) -> Genr
     Partially update an existing Genre in the database using the passed in GenrePatch model.
     Returns the updated GenreRead model if found, raises HTTPException otherwise.
     """
-    db_genre = await read_genre(session, id)
+    query = select(Genre).where(Genre.id == id)
+    result = await session.execute(query)
+    db_genre = result.scalar_one_or_none()
     if db_genre is None:
         raise HTTPException(status_code=404, detail="Genre not found")
 

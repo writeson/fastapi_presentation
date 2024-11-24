@@ -30,8 +30,7 @@ class Genre(GenreBase, table=True):
 
 # Create operation
 class GenreCreate(GenreBase):
-    meta_data: "MetaDataCreate"
-
+    pass
 
 # Read operation
 class GenreRead(GenreBase):
@@ -50,7 +49,6 @@ class GenreRead(GenreBase):
 
 
 class GenreReadWithTracks(GenreBase):
-    meta_data: "MetaDataReadOne"
     id: int
     tracks: List["Track"] = []
 
@@ -62,13 +60,11 @@ class GenreReadWithTracks(GenreBase):
 
 # Update operation (Put)
 class GenreUpdate(GenreBase):
-    meta_data: "MetaDataUpdate"
     name: str | None = Field(default=None)
 
 
 # Patch operation
 class GenrePatch(GenreBase):
-    meta_data: "MetaDataPatch"
     name: Optional[str] = Field(default=None)
 
 

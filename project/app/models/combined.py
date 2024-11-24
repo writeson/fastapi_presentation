@@ -20,12 +20,8 @@ T = TypeVar("T")
 U = TypeVar("U")
 
 
-class CombinedResponse(BaseModel):
-    pass
-
-
-class CombinedResponseCreate(CombinedResponse):
-    meta_data: MetaDataCreate
+class CombinedResponseCreate(BaseModel, Generic[T]):
+    meta_data: MetaDataCreate = MetaDataCreate()
     response: T
 
 
@@ -38,3 +34,15 @@ class CombinedResponseReadAll(BaseModel, Generic[T, U]):
 class CombinedResponseRead(BaseModel, Generic[T]):
     meta_data: MetaDataReadAll = MetaDataReadAll()
     response: T
+
+
+class CombinedResponseUpdate(BaseModel, Generic[T]):
+    meta_data: MetaDataUpdate = MetaDataUpdate()
+    response: T
+
+
+class CombinedResponsePatch(BaseModel, Generic[T]):
+    meta_data: MetaDataPatch = MetaDataPatch()
+    response: T
+
+

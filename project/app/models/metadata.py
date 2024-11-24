@@ -5,7 +5,7 @@ middleware. It contains the response data, status code, message
 and other information relevant to the response.
 """
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, HttpUrl
 from http import HTTPStatus
 
 from sqlmodel import Field
@@ -22,13 +22,8 @@ class MetaData(BaseModel):
     )
 
 
-# class MetaDataBaseResponse(BaseModel, Generic[T]):
-#     meta_data: MetaData
-#     response: T
-
-
 class MetaDataCreate(MetaData):
-    location: Optional[str] = ""
+    location: HttpUrl = Field(default="https://example.com", description="Location of the created resource")
 
 
 class MetaDataReadAll(MetaData):
@@ -44,12 +39,8 @@ class MetaDataReadOne(MetaData):
 
 
 class MetaDataUpdate(MetaData):
-    location: Optional[str] = ""
+    location: HttpUrl = Field(default="https://example.com", description="Location of the created resource")
 
 
 class MetaDataPatch(MetaData):
-    location: Optional[str] = ""
-
-
-# class MetaDataDelete(MetaData):
-#     pass
+    location: Optional[HttpUrl] = Field(default="https://example.com", description="Location of the created resource")
