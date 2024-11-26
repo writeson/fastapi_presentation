@@ -1,5 +1,4 @@
 from typing import List
-from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, Path, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,7 +15,7 @@ from project.app.models.combined import (
     CombinedResponseReadAll,
     CombinedResponseRead,
     CombinedResponseUpdate,
-    CombinedResponsePatch
+    CombinedResponsePatch,
 )
 from project.app.models.genres import (
     GenreCreate,
@@ -34,22 +33,25 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=CombinedResponseCreate[GenreRead], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=CombinedResponseCreate[GenreRead],
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_genre(genre: GenreCreate, db: AsyncSession = Depends(get_db)):
     async with db as session:
-        db_genre =await genre_crud.create_genre(session=session, genre=genre)
-        
+        db_genre = await genre_crud.create_genre(session=session, genre=genre)
+
         # construct the response in the expected format
-        response = CombinedResponseCreate(
+        return CombinedResponseCreate(
             meta_data=MetaDataCreate(),
             response=db_genre,
         )
-        return response
 
 
 @router.get("/", response_model=CombinedResponseReadAll[List[GenreRead], int])
 async def read_genres(
-        offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)
+    offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)
 ):
     async with db as session:
         genres, total_count = await genre_crud.read_genres(
@@ -85,14 +87,13 @@ async def update_genre(
             raise HTTPException(status_code=404, detail="Genre not found")
 
         # construct the response in the expected format
-        response = CombinedResponseUpdate(
+        return CombinedResponseUpdate(
             meta_data=MetaDataUpdate(),
             response=db_genre,
         )
-        return response
 
 
-@router.patch("/{id}", response_model=GenreRead)
+@router.patch("/{id}", response_model=CombinedResponsePatch[GenreRead])
 async def patch_genre(
     genre: GenrePatch,
     id: int = Path(..., title="The ID of the genre to patch"),
@@ -104,8 +105,7 @@ async def patch_genre(
             raise HTTPException(status_code=404, detail="Genre not found")
 
         # construct the response in the expected format
-        response = CombinedResponsePatch(
+        return CombinedResponsePatch(
             meta_data=MetaDataPatch(),
             response=db_genre,
         )
-        return response

@@ -1,5 +1,7 @@
+from typing import List
+
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from project.app.models.customers import (
@@ -40,7 +42,7 @@ async def read_customer(session: AsyncSession, id: int) -> CustomerRead:
 
 async def read_customers(
     session: AsyncSession, offset: int = 0, limit: int = 10
-) -> list[CustomerRead]:
+) -> List[CustomerRead]:
     """
     Retrieve all Customer from the database.
     Returns a list of CustomerRead models.
@@ -48,7 +50,14 @@ async def read_customers(
     query = select(Customer).offset(offset).limit(limit)
     result = await session.execute(query)
     db_customers = result.scalars().all()
-    return [CustomerRead.model_validate(db_customer) for db_customer in db_customers]
+
+    # Query for total count
+    count_query = select(func.count()).select_from(Customer)
+    total_count = await session.scalar(count_query)
+
+    return [
+        CustomerRead.model_validate(db_customer) for db_customer in db_customers
+    ], total_count
 
 
 async def update_customer(

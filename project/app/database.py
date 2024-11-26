@@ -6,7 +6,7 @@ from sqlalchemy.pool import StaticPool
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from contextlib import asynccontextmanager
 
-DB_PATH = Path(__file__).parent / "db" / "chinook.db"
+DB_PATH = Path(__file__).parent / "db" / "active" / "chinook.db"
 DATABASE_URL = f"sqlite+aiosqlite:///{DB_PATH}"
 POOL_SIZE = 5
 

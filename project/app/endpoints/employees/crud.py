@@ -1,5 +1,7 @@
+from typing import List
+
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from project.app.models.employees import (
@@ -35,12 +37,12 @@ async def read_employee(session: AsyncSession, id: int) -> EmployeeRead:
     db_employee = result.unique().scalar_one_or_none()
     if db_employee is None:
         raise HTTPException(status_code=404, detail="Employee not found")
-    return db_employee
+    return EmployeeRead.model_validate(db_employee)
 
 
 async def read_employees(
     session: AsyncSession, offset: int = 0, limit: int = 10
-) -> list[EmployeeRead]:
+) -> [List[EmployeeRead], int]:
     """
     Retrieve all Employee from the database.
     Returns a list of EmployeeRead models.
@@ -48,7 +50,14 @@ async def read_employees(
     query = select(Employee).offset(offset).limit(limit)
     result = await session.execute(query)
     db_employees = result.scalars().all()
-    return [EmployeeRead.model_validate(db_employee) for db_employee in db_employees]
+
+    # Query for total count
+    count_query = select(func.count()).select_from(Employee)
+    total_count = await session.scalar(count_query)
+
+    return [
+        EmployeeRead.model_validate(db_employee) for db_employee in db_employees
+    ], total_count
 
 
 async def update_employee(

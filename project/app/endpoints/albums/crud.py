@@ -1,3 +1,10 @@
+from typing import List
+
+from fastapi import HTTPException
+from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from project.app.models.albums import (
     Album,
     AlbumCreate,
@@ -6,10 +13,6 @@ from project.app.models.albums import (
     AlbumUpdate,
     AlbumPatch,
 )
-
-from sqlalchemy import select
-from sqlalchemy.orm import selectinload
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def create_album(session: AsyncSession, album: AlbumCreate):
@@ -21,7 +24,7 @@ async def create_album(session: AsyncSession, album: AlbumCreate):
     session.add(db_album)
     await session.commit()
     await session.refresh(db_album)
-    return db_album
+    return AlbumRead.model_validate(db_album)
 
 
 async def read_album(session: AsyncSession, id: int) -> AlbumRead | None:
@@ -32,7 +35,9 @@ async def read_album(session: AsyncSession, id: int) -> AlbumRead | None:
     query = select(Album).where(Album.id == id)
     result = await session.execute(query)
     db_album = result.scalar_one_or_none()
-    return db_album
+    if db_album is None:
+        raise HTTPException(status_code=404, detail="Album not found")
+    return AlbumRead.model_validate(db_album)
 
 
 async def read_album_with_tracks(session: AsyncSession, id: int) -> AlbumReadWithTracks:
@@ -42,21 +47,26 @@ async def read_album_with_tracks(session: AsyncSession, id: int) -> AlbumReadWit
     """
     query = select(Album).options(selectinload(Album.tracks)).where(Album.id == id)
     result = await session.execute(query)
-    db_artist = result.scalar_one_or_none()
-    return db_artist
+    db_album = result.scalar_one_or_none()
+    return AlbumReadWithTracks.model_validate(db_album)
 
 
 async def read_albums(
     session: AsyncSession, offset: int = 0, limit: int = 10
-) -> list[AlbumRead]:
+) -> [List[AlbumRead], int]:
     """
     Retrieve all Album from the database.
-    Returns a list of AlbumRead models.
+    Returns a list of AlbumRead models and the total count of albums.
     """
     query = select(Album).offset(offset).limit(limit)
     result = await session.execute(query)
     db_albums = result.scalars().all()
-    return db_albums
+
+    # Query for total count
+    count_query = select(func.count()).select_from(Album)
+    total_count = await session.scalar(count_query)
+
+    return [AlbumRead.model_validate(db_album) for db_album in db_albums], total_count
 
 
 async def update_album(

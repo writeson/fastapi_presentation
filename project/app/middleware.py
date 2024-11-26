@@ -7,7 +7,7 @@ metadata about the response
 
 import json
 from logging import getLogger
-from typing import List, Dict
+from typing import List, Dict, Optional
 from http import HTTPStatus
 from urllib.parse import parse_qs
 from functools import lru_cache
@@ -36,6 +36,12 @@ async def log_middleware(request: Request, call_next):
 
 
 class MetadataMiddleware(BaseHTTPMiddleware):
+    """
+    This middleware class modifies the response to include
+    metadata about the response, like location of resource for POST, PUT
+    and PATCH requests, and pagination information for GET requests of collections
+    """
+
     async def dispatch(self, request: Request, call_next):
         # Skip modification for OpenAPI schema requests
         if request.url.path == "/openapi.json":
@@ -49,9 +55,7 @@ class MetadataMiddleware(BaseHTTPMiddleware):
             return original_response
 
         # Extract the response body
-        response_body = [
-            section async for section in original_response.body_iterator
-        ]
+        response_body = [section async for section in original_response.body_iterator]
         # Decode the JSON response body
         decoded_body = b"".join(response_body).decode()
 
@@ -83,56 +87,65 @@ def get_status_description(status_code: int) -> str:
 
 def build_response_data(
     request: Request, original_response: Response, data: Dict
-) -> Dict:
+) -> Optional[Dict]:
     """
     Build a response based on the request and data
+
+    :param request: FastAPI Request object
+    :param original_response: FastAPI Response object
+    :param data: Dictionary containing response data
+
+    returns: Dict containing formatted response data or None
     """
     # get common metadata elements
-    status_code = original_response.status_code
-    status_message = get_status_description(status_code)
-    
+    base_meta = {
+        "status_code": original_response.status_code,
+        "status_message": get_status_description(original_response.status_code),
+    }
+    request_url = str(request.url)
+
     match request.method:
         case "POST":
             data["meta_data"] = {
-                "status_code":  status_code,
-                "message": status_message,
-                "location": f"{str(request.url)}{data['response']['id']}",
+                **base_meta,
+                "location": f"{request_url}{data['response']['id']}",
             }
             return data
 
         case "PUT" | "PATCH":
             data["meta_data"] = {
-                "status_code":  status_code,
-                "message": status_message,
-                "location": f"{str(request.url)}",
+                **base_meta,
+                "location": f"{request_url}",
             }
             return data
 
-        case "GET" if "response" in data and isinstance(
-            data["response"], List
-        ):
-            query_string = request.scope.get("query_string", b"").decode()
-            query_params = parse_qs(query_string)
-            offset = int(query_params["offset"][0])
-            limit = int(query_params["limit"][0])
-            total_count = int(data.pop("total_count", 0))
-            page = (offset // limit) + 1
-            page_count = total_count // limit + (1 if total_count % limit != 0 else 0)
-            data["meta_data"] = {
-                "status_code": original_response.status_code,
-                "message": HTTPStatus(original_response.status_code).description,
-                "offset": offset,
-                "limit": limit,
-                "page": page,
-                "page_count": page_count,
-                "total_count": total_count,
-            }
-            return data
+        case "GET" if "response" in data and isinstance(data["response"], List):
+            try:
+                query_string = request.scope.get("query_string", b"").decode()
+                query_params = parse_qs(query_string)
+                offset = int(query_params.get("offset", [0])[0])
+                limit = int(query_params.get("limit", [10])[0])
+                total_count = int(data.pop("total_count", 0))
+                page = (offset // limit) + 1
+                page_count = total_count // limit + (
+                    1 if total_count % limit != 0 else 0
+                )
+                data["meta_data"] = {
+                    **base_meta,
+                    "offset": offset,
+                    "limit": limit,
+                    "page": page,
+                    "page_count": page_count,
+                    "total_count": total_count,
+                }
+                return data
+            except (KeyError, ValueError, TypeError):
+                data["meta_data"] = base_meta
+                return data
 
         case "GET" if "response" in data and isinstance(data["response"], Dict):
             data["meta_data"] = {
-                "status_code": original_response.status_code,
-                "message": HTTPStatus(original_response.status_code).description,
+                **base_meta,
             }
             return data
 

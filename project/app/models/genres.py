@@ -22,7 +22,6 @@ class Genre(GenreBase, table=True):
         sa_column=Column("GenreId", Integer, primary_key=True),
         description="The unique identifier for the genre",
     )
-
     tracks: List["Track"] = Relationship(back_populates="genre")
 
     model_config = ConfigDict(from_attributes=True)
@@ -32,20 +31,12 @@ class Genre(GenreBase, table=True):
 class GenreCreate(GenreBase):
     pass
 
+
 # Read operation
 class GenreRead(GenreBase):
     id: int
 
     model_config = ConfigDict(from_attributes=True)
-
-
-# Create a new Pydantic model for the paginated response
-# class PaginatedGenreResponse(SQLModel):
-#     meta_data: Optional["MetaDataReadAll"]
-#     response: list[GenreRead]
-#     total_count: int
-#     offset: int
-#     limit: int
 
 
 class GenreReadWithTracks(GenreBase):
@@ -69,9 +60,3 @@ class GenrePatch(GenreBase):
 
 
 from .tracks import Track  # noqa: E402
-from .metadata import (  # noqa: E402
-    MetaDataCreate,
-    MetaDataReadOne,
-    MetaDataUpdate,
-    MetaDataPatch,
-)

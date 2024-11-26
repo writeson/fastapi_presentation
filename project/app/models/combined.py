@@ -4,7 +4,7 @@ used to pull together the particular route class response and
 a corresponding metadata response.
 """
 
-from typing import Optional, List, Generic, TypeVar
+from typing import Generic, TypeVar
 from pydantic import BaseModel
 
 from .metadata import (
@@ -32,7 +32,7 @@ class CombinedResponseReadAll(BaseModel, Generic[T, U]):
 
 
 class CombinedResponseRead(BaseModel, Generic[T]):
-    meta_data: MetaDataReadAll = MetaDataReadAll()
+    meta_data: MetaDataReadOne = MetaDataReadOne()
     response: T
 
 
@@ -44,5 +44,3 @@ class CombinedResponseUpdate(BaseModel, Generic[T]):
 class CombinedResponsePatch(BaseModel, Generic[T]):
     meta_data: MetaDataPatch = MetaDataPatch()
     response: T
-
-

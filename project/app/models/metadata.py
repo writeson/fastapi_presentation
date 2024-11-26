@@ -4,6 +4,7 @@ is attached to every response by the `MetadataMiddleware`
 middleware. It contains the response data, status code, message
 and other information relevant to the response.
 """
+
 from typing import Optional
 from pydantic import BaseModel, HttpUrl
 from http import HTTPStatus
@@ -23,7 +24,9 @@ class MetaData(BaseModel):
 
 
 class MetaDataCreate(MetaData):
-    location: HttpUrl = Field(default="https://example.com", description="Location of the created resource")
+    location: HttpUrl = Field(
+        default="https://example.com", description="Location of the created resource"
+    )
 
 
 class MetaDataReadAll(MetaData):
@@ -39,8 +42,12 @@ class MetaDataReadOne(MetaData):
 
 
 class MetaDataUpdate(MetaData):
-    location: HttpUrl = Field(default="https://example.com", description="Location of the created resource")
+    location: HttpUrl = Field(
+        default="https://example.com", description="Location of the created resource"
+    )
 
 
 class MetaDataPatch(MetaData):
-    location: Optional[HttpUrl] = Field(default="https://example.com", description="Location of the created resource")
+    location: Optional[HttpUrl] = Field(
+        default="https://example.com", description="Location of the created resource"
+    )

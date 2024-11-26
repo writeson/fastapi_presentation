@@ -1,5 +1,7 @@
+from typing import List
+
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -40,7 +42,7 @@ async def read_artist(session: AsyncSession, id: int) -> ArtistRead:
 
 async def read_artists(
     session: AsyncSession, offset: int = 0, limit: int = 10
-) -> list[ArtistRead]:
+) -> List[ArtistRead]:
     """
     Retrieve all Artists from the database.
     Returns a list of ArtistRead models.
@@ -48,7 +50,14 @@ async def read_artists(
     query = select(Artist).offset(offset).limit(limit)
     result = await session.execute(query)
     db_artists = result.scalars().all()
-    return [ArtistRead.model_validate(db_artist) for db_artist in db_artists]
+
+    # Query for total count
+    count_query = select(func.count()).select_from(Artist)
+    total_count = await session.scalar(count_query)
+
+    return [
+        ArtistRead.model_validate(db_artist) for db_artist in db_artists
+    ], total_count
 
 
 async def read_artist_with_albums(
