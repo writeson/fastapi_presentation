@@ -79,10 +79,14 @@ async def read_artist(
 @router.get("/{id}/albums", response_model=CombinedResponseRead[ArtistReadWithAlbums])
 async def read_artist_with_albums(
     id: int = Path(..., title="The ID of the artist to get"),
+    offset: int = 0,
+    limit: int = 10,
     db: AsyncSession = Depends(get_db),
 ):
     async with db as session:
-        db_artist = await artist_crud.read_artist_with_albums(session=session, id=id)
+        db_artist = await artist_crud.read_artist_with_albums(
+            session=session, id=id, offset=offset, limit=limit
+        )
         if db_artist is None:
             raise HTTPException(status_code=404, detail="Artist not found")
         return CombinedResponseRead(

@@ -2,7 +2,6 @@ from typing import List
 
 from fastapi import HTTPException
 from sqlalchemy import select, func
-from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from project.app.models.artists import (
@@ -13,6 +12,7 @@ from project.app.models.artists import (
     ArtistUpdate,
     ArtistPatch,
 )
+from project.app.models.albums import Album
 
 
 async def create_artist(session: AsyncSession, artist: ArtistCreate) -> ArtistRead:
@@ -61,17 +61,37 @@ async def read_artists(
 
 
 async def read_artist_with_albums(
-    session: AsyncSession, id: int
-) -> ArtistReadWithAlbums:
+    session: AsyncSession, id: int, offset: int = 0, limit: int = 10
+) -> [ArtistReadWithAlbums, int]:
     """
-    Retrieve an Artist with its albums from the database.
-    Returns an ArtistReadWithAlbums model."""
-    query = select(Artist).options(joinedload(Artist.albums)).where(Artist.id == id)
+    Retrieve an Artist the database with an paginated
+    list of associated albums
+    """
+    query = select(Artist).where(Artist.id == id)
+
+    # Execute the query
     result = await session.execute(query)
-    db_artist = result.unique().scalar_one_or_none()
+    db_artist = result.scalar_one_or_none()
     if db_artist is None:
         raise HTTPException(status_code=404, detail="Artist not found")
-    return ArtistReadWithAlbums.model_validate(db_artist)
+
+    # Fetch albums separately with limit and offset
+    albums_query = (
+        select(Album)
+        .where(Album.artist_id == id)
+        .offset(offset)
+        .limit(limit)
+        .order_by(Album.id)
+    )
+    albums_result = await session.execute(albums_query)
+    albums = list(albums_result.scalars().all())
+    db_artist.albums = albums
+
+    # Query for total count of albums
+    count_query = select(func.count()).select_from(Album)
+    total_count = await session.scalar(count_query)
+
+    return [ArtistReadWithAlbums.model_validate(db_artist), total_count]
 
 
 async def update_artist(
