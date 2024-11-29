@@ -162,4 +162,4 @@ cython_debug/
 .idea/
 
 # ignore my zzz_archive stuff
-.zzz_archive/
+zzz_archive/
