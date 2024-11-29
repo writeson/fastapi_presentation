@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Type, TypeVar
 
 from fastapi import HTTPException
 from sqlalchemy import select, func
@@ -8,11 +8,14 @@ from project.app.models.artists import (
     Artist,
     ArtistCreate,
     ArtistRead,
-    ArtistReadWithAlbums,
     ArtistUpdate,
     ArtistPatch,
 )
-from project.app.models.albums import Album
+from project.app.models.albums import Album, AlbumRead
+from ..common import (
+    read_item,
+    read_items,
+)
 
 
 async def create_artist(session: AsyncSession, artist: ArtistCreate) -> ArtistRead:
@@ -32,66 +35,65 @@ async def read_artist(session: AsyncSession, id: int) -> ArtistRead:
     Retrieve an Artist from the database by ID.
     Returns the ArtistRead model if found, None otherwise.
     """
-    query = select(Artist).where(Artist.id == id)
-    result = await session.execute(query)
-    db_artist = result.scalar_one_or_none()
-    if db_artist is None:
-        raise HTTPException(status_code=404, detail="Artist not found")
-    return ArtistRead.model_validate(db_artist)
+    return await read_item(session, id, Artist, ArtistRead)
+    
+    # query = select(Artist).where(Artist.id == id)
+    # result = await session.execute(query)
+    # db_artist = result.scalar_one_or_none()
+    # if db_artist is None:
+    #     raise HTTPException(status_code=404, detail="Artist not found")
+    # return ArtistRead.model_validate(db_artist)
 
 
 async def read_artists(
     session: AsyncSession, offset: int = 0, limit: int = 10
-) -> List[ArtistRead]:
+) -> [List[ArtistRead], int]:
     """
     Retrieve all Artists from the database.
     Returns a list of ArtistRead models.
     """
-    query = select(Artist).offset(offset).limit(limit)
-    result = await session.execute(query)
-    db_artists = result.scalars().all()
+    retval = await read_items(session, offset, limit, Artist, ArtistRead)
+    return retval
+    
+    # query = select(Artist).offset(offset).limit(limit)
+    # result = await session.execute(query)
+    # db_artists = result.scalars().all()
+    # 
+    # # Query for total count
+    # count_query = select(func.count()).select_from(Artist)
+    # total_count = await session.scalar(count_query)
+    # 
+    # return [
+    #     ArtistRead.model_validate(db_artist) for db_artist in db_artists
+    # ], total_count
 
-    # Query for total count
-    count_query = select(func.count()).select_from(Artist)
-    total_count = await session.scalar(count_query)
 
-    return [
-        ArtistRead.model_validate(db_artist) for db_artist in db_artists
-    ], total_count
-
-
-async def read_artist_with_albums(
+async def read_artist_albums(
     session: AsyncSession, id: int, offset: int = 0, limit: int = 10
-) -> [ArtistReadWithAlbums, int]:
+) -> [List[AlbumRead], int]:
     """
     Retrieve an Artist the database with an paginated
     list of associated albums
     """
-    query = select(Artist).where(Artist.id == id)
-
-    # Execute the query
-    result = await session.execute(query)
-    db_artist = result.scalar_one_or_none()
-    if db_artist is None:
-        raise HTTPException(status_code=404, detail="Artist not found")
-
-    # Fetch albums separately with limit and offset
-    albums_query = (
+    query = (
         select(Album)
         .where(Album.artist_id == id)
+        .order_by(Album.id)
         .offset(offset)
         .limit(limit)
-        .order_by(Album.id)
     )
-    albums_result = await session.execute(albums_query)
-    albums = list(albums_result.scalars().all())
-    db_artist.albums = albums
-
+    # Execute the query
+    result = await session.execute(query)
+    db_albums = result.scalars().all()
+    if db_albums is None:
+        raise HTTPException(status_code=404, detail="Albums not found")
     # Query for total count of albums
     count_query = select(func.count()).select_from(Album)
     total_count = await session.scalar(count_query)
 
-    return [ArtistReadWithAlbums.model_validate(db_artist), total_count]
+    return [
+        AlbumRead.model_validate(db_album) for db_album in db_albums
+    ], total_count
 
 
 async def update_artist(

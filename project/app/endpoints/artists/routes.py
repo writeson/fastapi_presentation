@@ -5,6 +5,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from project.app.database import get_db
 from project.app.endpoints.artists import crud as artist_crud
+from project.app.endpoints.common import (
+    create_item,
+    read_items,
+    read_item,
+    update_item,
+    patch_item,
+)
 from project.app.models.metadata import (
     MetaDataCreate,
     MetaDataUpdate,
@@ -18,12 +25,13 @@ from project.app.models.combined import (
     CombinedResponsePatch,
 )
 from project.app.models.artists import (
+    Artist,
     ArtistCreate,
     ArtistRead,
-    ArtistReadWithAlbums,
     ArtistUpdate,
     ArtistPatch,
 )
+from project.app.models.albums import Album, AlbumRead
 
 
 router = APIRouter(
@@ -41,9 +49,9 @@ router = APIRouter(
 )
 async def create_artist(artist: ArtistCreate, db: AsyncSession = Depends(get_db)):
     async with db as session:
-        db_artist = await artist_crud.create_artist(session=session, artist=artist)
-
-        # construct the response in the expected format
+        db_artist = await create_item(session, artist, Artist, ArtistRead)
+        if db_artist is None:
+            raise HTTPException(status_code=400, detail="Artist already exists")
         return CombinedResponseCreate(
             meta_data=MetaDataCreate(),
             response=db_artist,
@@ -55,9 +63,7 @@ async def read_artists(
     offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)
 ):
     async with db as session:
-        artists, total_count = await artist_crud.read_artists(
-            session=session, offset=offset, limit=limit
-        )
+        artists, total_count= await read_items(session, offset, limit, Artist, ArtistRead)
         return CombinedResponseReadAll(
             response=artists,
             total_count=total_count,
@@ -70,27 +76,24 @@ async def read_artist(
     db: AsyncSession = Depends(get_db),
 ):
     async with db as session:
-        db_artist = await artist_crud.read_artist(session=session, id=id)
+        db_artist = await read_item(session, id, Artist, ArtistRead)
         if db_artist is None:
             raise HTTPException(status_code=404, detail="Artist not found")
         return CombinedResponseRead(response=ArtistRead.model_validate(db_artist))
 
 
-@router.get("/{id}/albums", response_model=CombinedResponseRead[ArtistReadWithAlbums])
-async def read_artist_with_albums(
+@router.get("/{id}/albums", response_model=CombinedResponseReadAll[List[AlbumRead], int])
+async def read_artist_albums(
     id: int = Path(..., title="The ID of the artist to get"),
     offset: int = 0,
     limit: int = 10,
     db: AsyncSession = Depends(get_db),
 ):
     async with db as session:
-        db_artist = await artist_crud.read_artist_with_albums(
-            session=session, id=id, offset=offset, limit=limit
-        )
-        if db_artist is None:
-            raise HTTPException(status_code=404, detail="Artist not found")
-        return CombinedResponseRead(
-            response=ArtistReadWithAlbums.model_validate(db_artist)
+        albums, total_count= await read_items(session, offset, limit, Album, AlbumRead)
+        return CombinedResponseReadAll(
+            response=albums,
+            total_count=total_count,
         )
 
 
@@ -101,9 +104,7 @@ async def update_artist(
     db: AsyncSession = Depends(get_db),
 ):
     async with db as session:
-        db_artist = await artist_crud.update_artist(
-            session=session, id=id, artist=artist
-        )
+        db_artist = await update_item(session, id, artist, Artist, ArtistRead)
         if db_artist is None:
             raise HTTPException(status_code=404, detail="Artist not found")
 
@@ -121,9 +122,7 @@ async def patch_artist(
     db: AsyncSession = Depends(get_db),
 ):
     async with db as session:
-        db_artist = await artist_crud.patch_artist(
-            session=session, id=id, artist=artist
-        )
+        db_artist = await patch_item(session, id, artist, Artist, ArtistRead)
         if db_artist is None:
             raise HTTPException(status_code=404, detail="Artist not found")
 
