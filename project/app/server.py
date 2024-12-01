@@ -12,27 +12,33 @@ up and running. The database itself is the chinook sample database
 available here: https://www.sqlitetutorial.net/sqlite-sample-database/
 """
 
+from typing import Dict
 from logging import getLogger
 from contextlib import asynccontextmanager
-
-from database import init_db
-from endpoints.artists.routes import router as artists_router
-from endpoints.albums.routes import router as albums_router
-from endpoints.tracks.routes import router as tracks_router
-from endpoints.genres.routes import router as genres_router
-from endpoints.media_types.routes import router as media_types_router
-from endpoints.playlists.routes import router as playlists_router
-from endpoints.invoices.routes import router as invoices_router
-from endpoints.invoice_items.routes import router as invoice_items_router
-from endpoints.customers.routes import router as customers_router
-from endpoints.employees.routes import router as employees_router
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from middleware import log_middleware, MetadataMiddleware
+
+from database import init_db
+
+# get the endpoint models to build the routes
+from project.app.models import artists
+from project.app.models import albums
+from project.app.models import tracks
+from project.app.models import genres
+from project.app.models import playlists
+from project.app.models import media_types
+from project.app.models import invoices
+from project.app.models import invoice_items
+from project.app.models import customers
+from project.app.models import employees
+from endpoints.routes import build_routes
+
 from logger import log_config
+
 
 logger = getLogger()
 
@@ -82,20 +88,84 @@ def app_factory():
     fastapi_app.add_middleware(BaseHTTPMiddleware, dispatch=log_middleware)
     fastapi_app.add_middleware(MetadataMiddleware)
 
-    # add all the endpoint routers
-    fastapi_app.include_router(artists_router, prefix="/api/v1")
-    fastapi_app.include_router(albums_router, prefix="/api/v1")
-    fastapi_app.include_router(tracks_router, prefix="/api/v1")
-    fastapi_app.include_router(genres_router, prefix="/api/v1")
-    fastapi_app.include_router(media_types_router, prefix="/api/v1")
-    fastapi_app.include_router(playlists_router, prefix="/api/v1")
-    fastapi_app.include_router(invoices_router, prefix="/api/v1")
-    fastapi_app.include_router(invoice_items_router, prefix="/api/v1")
-    fastapi_app.include_router(customers_router, prefix="/api/v1")
-    fastapi_app.include_router(employees_router, prefix="/api/v1")
+    # add all the endpoint routes
+    for route_config in get_routes_config():
+        fastapi_app.include_router(build_routes(**route_config), prefix="/api/v1")
+
     return fastapi_app
 
 
+def get_routes_config() -> Dict:
+    """
+    Returns all the routes configuration for the application
+
+    :return: Dict of router info
+    """
+    return [
+        {
+            "prefix": "artists",
+            "tags": "Artists",
+            "module": artists,
+            "children_modules": [albums],
+        },
+        {
+            "prefix": "albums",
+            "tags": "Albums",
+            "module": albums,
+            "children_modules": [tracks],
+        },
+        {
+            "prefix": "genres",
+            "tags": "Genres",
+            "module": genres,
+            "children_modules": [],
+        },
+        {
+            "prefix": "tracks",
+            "tags": "Tracks",
+            "module": tracks,
+            "children_modules": [playlists],
+        },
+        {
+            "prefix": "playlists",
+            "tags": "Playlists",
+            "module": playlists,
+            "children_modules": [],
+        },
+        {
+            "prefix": "media_types",
+            "tags": "Media Types",
+            "module": media_types,
+            "children_modules": [],
+        },
+        {
+            "prefix": "invoices",
+            "tags": "Invoices",
+            "module": invoices,
+            "children_modules": [invoice_items],
+        },
+        {
+            "prefix": "invoice_items",
+            "tags": "Invoice Items",
+            "module": invoice_items,
+            "children_modules": [],
+        },
+        {
+            "prefix": "customers",
+            "tags": "Customers",
+            "module": customers,
+            "children_modules": [invoices],
+        },
+        {
+            "prefix": "employees",
+            "tags": "Employees",
+            "module": employees,
+            "children_modules": [],
+        },
+    ]
+
+
+# Initialize and create the application
 app = app_factory()
 
 

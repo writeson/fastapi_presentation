@@ -18,10 +18,10 @@ OutputType = TypeVar("OutputType")
 
 
 async def create_item(
-        session: AsyncSession,
-        data: InputType,
-        input_class: Type[InputType],
-        output_class: Type[OutputType],
+    session: AsyncSession,
+    data: InputType,
+    input_class: Type[InputType],
+    output_class: Type[OutputType],
 ) -> OutputType:
     """
     Create a new item in the database.
@@ -41,10 +41,10 @@ async def create_item(
 
 
 async def read_item(
-        session: AsyncSession,
-        id: int,
-        input_class: Type[InputType],
-        output_class: Type[OutputType],
+    session: AsyncSession,
+    id: int,
+    input_class: Type[InputType],
+    output_class: Type[OutputType],
 ) -> OutputType:
     """
     Retrieve an item from the database by ID.
@@ -65,11 +65,11 @@ async def read_item(
 
 
 async def read_items(
-        session: AsyncSession,
-        offset: int = 0,
-        limit: int = 10,
-        input_class: Type[InputType] = None,
-        output_class: Type[OutputType] = None,
+    session: AsyncSession,
+    offset: int = 0,
+    limit: int = 10,
+    input_class: Type[InputType] = None,
+    output_class: Type[OutputType] = None,
 ) -> [List[OutputType], int]:
     """
     Retrieve a paginated list of items from the database.
@@ -89,17 +89,15 @@ async def read_items(
     count_query = select(func.count()).select_from(input_class)
     total_count = await session.scalar(count_query)
 
-    return [
-        output_class.model_validate(db_item) for db_item in db_items
-    ], total_count
+    return [output_class.model_validate(db_item) for db_item in db_items], total_count
 
 
 async def update_item(
-        session: AsyncSession, 
-        id: int,
-        data: InputType,
-        input_class: Type[InputType],
-        output_class: Type[OutputType],
+    session: AsyncSession,
+    id: int,
+    data: InputType,
+    input_class: Type[InputType],
+    output_class: Type[OutputType],
 ) -> OutputType:
     """
     Update an existing item in the database using the passed in input class and output class.
@@ -127,11 +125,11 @@ async def update_item(
 
 
 async def patch_item(
-        session: AsyncSession,
-        id: int,
-        data: InputType,
-        input_class: Type[InputType],
-        output_class: Type[OutputType],
+    session: AsyncSession,
+    id: int,
+    data: InputType,
+    input_class: Type[InputType],
+    output_class: Type[OutputType],
 ) -> OutputType:
     """
     Partially update an existing item in the database using the passed in input class and output class.
