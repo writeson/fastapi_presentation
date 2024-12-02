@@ -10,9 +10,11 @@ import inspect
 
 from fastapi import HTTPException
 from sqlalchemy import select, func
+from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
+ParentType = TypeVar("ParentType")
 InputType = TypeVar("InputType")
 OutputType = TypeVar("OutputType")
 
@@ -37,30 +39,6 @@ async def create_item(
     session.add(db_item)
     await session.commit()
     await session.refresh(db_item)
-    return output_class.model_validate(db_item)
-
-
-async def read_item(
-    session: AsyncSession,
-    id: int,
-    input_class: Type[InputType],
-    output_class: Type[OutputType],
-) -> OutputType:
-    """
-    Retrieve an item from the database by ID.
-    Returns the item as the specified output class if found, None otherwise.
-    """
-    if not inspect.isclass(input_class):
-        raise ValueError("input_class must be class object")
-
-    if not inspect.isclass(output_class):
-        raise ValueError("output_class must be class object")
-
-    query = select(input_class).where(input_class.id == id)
-    result = await session.execute(query)
-    db_item = result.scalar_one_or_none()
-    if db_item is None:
-        raise HTTPException(status_code=404, detail=f"{input_class} not found")
     return output_class.model_validate(db_item)
 
 
@@ -90,6 +68,89 @@ async def read_items(
     total_count = await session.scalar(count_query)
 
     return [output_class.model_validate(db_item) for db_item in db_items], total_count
+
+
+async def read_item(
+        session: AsyncSession,
+        id: int,
+        input_class: Type[InputType],
+        output_class: Type[OutputType],
+) -> OutputType:
+    """
+    Retrieve an item from the database by ID.
+    Returns the item as the specified output class if found, None otherwise.
+    """
+    if not inspect.isclass(input_class):
+        raise ValueError("input_class must be class object")
+
+    if not inspect.isclass(output_class):
+        raise ValueError("output_class must be class object")
+
+    query = select(input_class).where(input_class.id == id)
+    result = await session.execute(query)
+    db_item = result.scalar_one_or_none()
+    if db_item is None:
+        raise HTTPException(status_code=404, detail=f"{input_class} not found")
+    return output_class.model_validate(db_item)
+
+
+async def read_children_items(
+        session: AsyncSession,
+        parent_id: int,
+        offset: int,
+        limit: int,
+        parent_class: Type[ParentType],
+        input_class: Type[InputType],
+        output_class: Type[OutputType],
+        relationship_name: str,  # Name of the relationship to load
+) -> OutputType:
+    """
+    Retrieve child items from the database for a given parent using joinedload.
+    Returns the items as the specified output class along with the total count.
+    """
+    if not inspect.isclass(parent_class):
+        raise ValueError("parent_class must be a class object")
+
+    if not inspect.isclass(input_class):
+        raise ValueError("input_class must be a class object")
+
+    if not inspect.isclass(output_class):
+        raise ValueError("output_class must be a class object")
+
+    # Validate the relationship name
+    if not hasattr(parent_class, relationship_name):
+        raise ValueError(f"'{parent_class.__name__}' has no relationship '{relationship_name}'")
+
+    # Generate dynamic joinedload options
+    joinedload_options = get_joinedload_options(parent_class, relationship_name)
+
+    # Construct the query with the generated options
+    query = (
+        select(parent_class)
+        .options(*joinedload_options)
+        .where(parent_class.id == parent_id)
+    )
+    result = await session.execute(query)
+    parent_item = result.unique().scalar_one_or_none()
+
+    if parent_item is None:
+        return [], 0  # No parent found
+
+    # Get the children from the loaded relationship
+    children = getattr(parent_item, relationship_name)
+
+    # Ensure children is iterable (in case it's not a list)
+    if not isinstance(children, list):
+        children = [children]
+
+    # Apply offset and limit to the children list
+    paginated_children = children[offset : offset + limit]
+
+    # Query for total count
+    total_count = len(children)
+
+    return [output_class.model_validate(child) for child in paginated_children], total_count
+
 
 
 async def update_item(
@@ -155,3 +216,26 @@ async def patch_item(
     await session.commit()
     await session.refresh(db_item)
     return output_class.model_validate(db_item)
+
+
+from sqlalchemy.orm import joinedload
+
+
+def get_joinedload_options(parent_class, relationship_name):
+    """
+    Generate joinedload options dynamically for a given relationship name.
+    """
+    relationship = getattr(parent_class, relationship_name, None)
+    if not relationship:
+        raise ValueError(f"'{relationship_name}' is not a valid relationship of '{parent_class.__name__}'")
+
+    # Base joinedload for the main relationship
+    options = [joinedload(relationship)]
+
+    # Add nested relationships dynamically
+    for rel in parent_class.__mapper__.relationships:
+        if rel.key == relationship_name:
+            for sub_rel in rel.mapper.relationships:
+                options.append(joinedload(getattr(relationship.property.mapper.class_, sub_rel.key)))
+
+    return options

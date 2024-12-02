@@ -124,7 +124,7 @@ def get_routes_config() -> Dict:
             "prefix": "tracks",
             "tags": "Tracks",
             "module": tracks,
-            "children_modules": [playlists],
+            "children_modules": [playlists, media_types, genres],
         },
         {
             "prefix": "playlists",
@@ -154,7 +154,7 @@ def get_routes_config() -> Dict:
             "prefix": "customers",
             "tags": "Customers",
             "module": customers,
-            "children_modules": [invoices],
+            "children_modules": [],
         },
         {
             "prefix": "employees",

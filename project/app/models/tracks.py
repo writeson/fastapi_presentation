@@ -13,10 +13,6 @@ class TrackBase(SQLModel):
         sa_column=Column("Name", String(200)),
         description="The name of the track",
     )
-    media_type_id: int = Field(
-        sa_column=Column("MediaTypeId", Integer, ForeignKey("media_types.MediaTypeId")),
-        description="Foreign key to the media type",
-    )
     milliseconds: int = Field(
         sa_column=Column("Milliseconds", Integer),
         description="The length of the track in milliseconds",
@@ -29,6 +25,10 @@ class TrackBase(SQLModel):
         default=None,
         sa_column=Column("AlbumId", Integer, ForeignKey("albums.AlbumId")),
         description="Foreign key to the album",
+    )
+    media_type_id: int = Field(
+        sa_column=Column("MediaTypeId", Integer, ForeignKey("media_types.MediaTypeId")),
+        description="Foreign key to the media type",
     )
     genre_id: Optional[int] = Field(
         default=None,
