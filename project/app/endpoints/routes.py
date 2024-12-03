@@ -1,4 +1,4 @@
-from typing import List, TypeVar, Any
+from typing import List, Tuple, TypeVar
 from types import ModuleType
 
 from fastapi import APIRouter, Depends, Path, status, HTTPException
@@ -26,89 +26,84 @@ OutputType = TypeVar("OutputType")
 
 
 def build_routes(
-    prefix: str,
-    tags: str,
-    module: ModuleType,
-    children_modules: List[ModuleType],
+    model: ModuleType,
+    child_models: List[ModuleType],
 ) -> APIRouter:
+    prefix, _, _ = get_model_names(model)
+    tags = prefix.title().replace("_", " ")
+
     router = APIRouter(
         prefix=f"/{prefix}",
         tags=[f"{tags}"],
         responses={404: {"description": "Not found"}},
         dependencies=[Depends(get_db)],
     )
-    # Modify the prefix to be the singular version
-    prefix = prefix[:-1]
-    
+    # create the endpoint routes
     params = {
         "router": router,
-        "prefix": prefix,
-        "tags": tags,
-        "module": module,
-        "children_modules": children_modules,
+        "model": model,
+        "child_models": child_models,
     }
-
     create_item_route(**params)
     get_items_route(**params)
     get_item_route(**params)
-    get_item_children_route(**params)
+    # get_item_children_route(**params)
     update_item_route(**params)
     patch_item_route(**params)
     return router
 
 
 def create_item_route(
-        router: APIRouter, 
-        prefix: str, 
-        tags: str,
-        module: ModuleType,
-        children_modules: List[ModuleType],
+    router: APIRouter,
+    model: ModuleType,
+    child_models: List[ModuleType],
 ):
     """
     Create the generic create item route
     """
+    prefix, prefix_singular, class_name = get_model_names(model)
+
     @router.post(
         "/",
-        response_model=CombinedResponseCreate[
-            getattr(module, f"{prefix.title().replace("_", "")}Read")
-        ],
+        response_model=CombinedResponseCreate[getattr(model, f"{class_name}Read")],
         status_code=status.HTTP_201_CREATED,
     )
     async def create_item(
-        data: getattr(module, f"{prefix.title().replace("_", "")}Create"),
+        data: getattr(model, f"{class_name}Create"),
         db: AsyncSession = Depends(get_db),
     ):
         async with db as session:
             db_item = await crud.create_item(
                 session=session,
                 data=data,
-                input_class=getattr(module, f"{prefix.title().replace("_", "")}"),
-                output_class=getattr(module, f"{prefix.title().replace("_", "")}Read"),
+                input_class=getattr(model, f"{class_name}"),
+                output_class=getattr(model, f"{class_name}Read"),
             )
             if db_item is None:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"{prefix.title().replace("_", "")} already exists",
+                    detail=f"{class_name} already exists",
                 )
             return CombinedResponseCreate(
                 meta_data=MetaDataCreate(),
                 response=db_item,
             )
 
+
 def get_items_route(
-        router: APIRouter,
-        prefix: str,
-        tags: str,
-        module: ModuleType,
-        children_modules: List[ModuleType],
+    router: APIRouter,
+    model: ModuleType,
+    child_models: List[ModuleType],
 ):
     """
     Create the generic get item route
     """
+    prefix, prefix_singular, class_name = get_model_names(model)
+
     @router.get(
         "/",
         response_model=CombinedResponseReadAll[
-            List[getattr(module, f"{prefix.title().replace("_", "")}Read")], int
+            List[getattr(model, f"{class_name}Read")], int
         ],
     )
     async def read_items(
@@ -119,8 +114,8 @@ def get_items_route(
                 session=session,
                 offset=offset,
                 limit=limit,
-                input_class=getattr(module, f"{prefix.title().replace("_", "")}"),
-                output_class=getattr(module, f"{prefix.title().replace("_", "")}Read"),
+                input_class=getattr(model, f"{class_name}"),
+                output_class=getattr(model, f"{class_name}Read"),
             )
             return CombinedResponseReadAll(
                 response=items,
@@ -129,20 +124,18 @@ def get_items_route(
 
 
 def get_item_route(
-        router: APIRouter,
-        prefix: str,
-        tags: str,
-        module: ModuleType,
-        children_modules: List[ModuleType],
+    router: APIRouter,
+    model: ModuleType,
+    child_models: List[ModuleType],
 ):
     """
     Create the generic get item route
     """
+    prefix, prefix_singular, class_name = get_model_names(model)
+
     @router.get(
         "/{id}",
-        response_model=CombinedResponseRead[
-            getattr(module, f"{prefix.title().replace("_", "")}Read")
-        ],
+        response_model=CombinedResponseRead[getattr(model, f"{class_name}Read")],
     )
     async def read_item(
         id: int = Path(..., title=f"The ID of the {prefix} to get"),
@@ -152,34 +145,32 @@ def get_item_route(
             db_item = await crud.read_item(
                 session=session,
                 id=id,
-                input_class=getattr(module, f"{prefix.title().replace("_", "")}"),
-                output_class=getattr(module, f"{prefix.title().replace("_", "")}Read"),
+                input_class=getattr(model, f"{class_name}"),
+                output_class=getattr(model, f"{class_name}Read"),
             )
             if db_item is None:
                 raise HTTPException(
                     status_code=404,
-                    detail=f"{prefix.title().replace("_", "")} not found",
+                    detail=f"{class_name} not found",
                 )
-            item_read = getattr(module, f"{prefix.title().replace("_", "")}Read")
+            item_read = getattr(model, f"{class_name}Read")
             return CombinedResponseRead(response=item_read.model_validate(db_item))
 
 
 def get_item_children_route(
-        router: APIRouter,
-        prefix: str,
-        tags: str,
-        module: ModuleType,
-        children_modules: List[ModuleType],
+    router: APIRouter,
+    model: ModuleType,
+    child_models: List[ModuleType],
 ):
+    prefix, prefix_singular, class_name = get_model_names(model)
+
     # Build children routes
-    for child_module in children_modules:
-        parent_class = getattr(module, f"{prefix.title().replace("_", "")}")
-        child_prefix = child_module.__name__.split(".")[-1]
+    for child_model in child_models:
+        parent_class = getattr(model, f"{class_name}")
+        child_prefix = child_model.__name__.split(".")[-1]
         child_local_prefix = child_prefix[:-1]
-        child_class = getattr(child_module, f"{child_local_prefix.title().replace("_", "")}")
-        child_read_class = getattr(
-            child_module, f"{child_local_prefix.title().replace("_", "")}Read"
-        )
+        child_class = getattr(child_model, f"{child_local_class_name}")
+        child_read_class = getattr(child_model, f"{child_local_class_name}Read")
         relationship_name = get_relationship_name(parent_class, child_class)
 
         # Add the route with the factory-created function
@@ -189,7 +180,7 @@ def get_item_children_route(
             child_read_class,
             child_prefix,
             child_local_prefix,
-            relationship_name
+            relationship_name,
         )
         router.add_api_route(
             path=f"/{{id}}/{child_prefix}",
@@ -198,23 +189,21 @@ def get_item_children_route(
             response_model=CombinedResponseReadAll[List[child_read_class], int],
             methods=["GET"],
         )
-        
-        
+
+
 def update_item_route(
-        router: APIRouter,
-        prefix: str,
-        tags: str,
-        module: ModuleType,
-        children_modules: List[ModuleType],
+    router: APIRouter,
+    model: ModuleType,
+    child_models: List[ModuleType],
 ):
+    prefix, prefix_singular, class_name = get_model_names(model)
+
     @router.put(
         "/{id}",
-        response_model=CombinedResponseUpdate[
-            getattr(module, f"{prefix.title().replace("_", "")}Read")
-        ],
+        response_model=CombinedResponseUpdate[getattr(model, f"{class_name}Read")],
     )
     async def update_item(
-        data: getattr(module, f"{prefix.title().replace("_", "")}Update"),
+        data: getattr(model, f"{class_name}Update"),
         id: int = Path(..., title=f"The ID of the {prefix} to update"),
         db: AsyncSession = Depends(get_db),
     ):
@@ -223,13 +212,13 @@ def update_item_route(
                 session=session,
                 id=id,
                 data=data,
-                input_class=getattr(module, f"{prefix.title().replace("_", "")}"),
-                output_class=getattr(module, f"{prefix.title().replace("_", "")}Read"),
+                input_class=getattr(model, f"{class_name}"),
+                output_class=getattr(model, f"{class_name}Read"),
             )
             if db_item is None:
                 raise HTTPException(
                     status_code=404,
-                    detail=f"{prefix.title().replace("_", "")} not found",
+                    detail=f"{class_name} not found",
                 )
 
             # construct the response in the expected format
@@ -238,21 +227,20 @@ def update_item_route(
                 response=db_item,
             )
 
+
 def patch_item_route(
-        router: APIRouter,
-        prefix: str,
-        tags: str,
-        module: ModuleType,
-        children_modules: List[ModuleType],
+    router: APIRouter,
+    model: ModuleType,
+    child_models: List[ModuleType],
 ):
+    prefix, prefix_singular, class_name = get_model_names(model)
+
     @router.patch(
         "/{id}",
-        response_model=CombinedResponsePatch[
-            getattr(module, f"{prefix.title().replace("_", "")}Read")
-        ],
+        response_model=CombinedResponsePatch[getattr(model, f"{class_name}Read")],
     )
     async def patch_artist(
-        data: getattr(module, f"{prefix.title().replace("_", "")}Patch"),
+        data: getattr(model, f"{class_name}Patch"),
         id: int = Path(..., title=f"The ID of the {prefix} to patch"),
         db: AsyncSession = Depends(get_db),
     ):
@@ -261,13 +249,13 @@ def patch_item_route(
                 session=session,
                 id=id,
                 data=data,
-                input_class=getattr(module, f"{prefix.title().replace("_", "")}Read"),
-                output_class=getattr(module, f"{prefix.title().replace("_", "")}Read"),
+                input_class=getattr(model, f"{class_name}Read"),
+                output_class=getattr(model, f"{class_name}Read"),
             )
             if db_item is None:
                 raise HTTPException(
                     status_code=404,
-                    detail=f"{prefix.title().replace("_", "")} not found",
+                    detail=f"{class_name} not found",
                 )
 
             # construct the response in the expected format
@@ -278,18 +266,18 @@ def patch_item_route(
 
 
 def create_child_route(
-        parent_class, 
-        child_class, 
-        child_read_class, 
-        child_prefix: str, 
-        child_local_prefix: str,
-        relationship_name: str,
+    parent_class,
+    child_class,
+    child_read_class,
+    child_prefix: str,
+    child_local_prefix: str,
+    relationship_name: str,
 ):
     async def read_item_children(
-            id: int = Path(..., title=f"The ID of the {child_local_prefix} to get"),
-            offset: int = 0,
-            limit: int = 10,
-            db: AsyncSession = Depends(get_db),
+        id: int = Path(..., title=f"The ID of the {child_local_prefix} to get"),
+        offset: int = 0,
+        limit: int = 10,
+        db: AsyncSession = Depends(get_db),
     ):
         async with db as session:
             children, total_count = await crud.read_children_items(
@@ -306,6 +294,7 @@ def create_child_route(
                 response=children,
                 total_count=total_count,
             )
+
     return read_item_children
 
 
@@ -316,4 +305,21 @@ def get_relationship_name(parent_class, child_class):
     for relationship in parent_class.__mapper__.relationships:
         if relationship.mapper.class_ == child_class:
             return relationship.key
-    raise ValueError(f"No relationship found between {parent_class.__name__} and {child_class.__name__}")
+    raise ValueError(
+        f"No relationship found between {parent_class.__name__} and {child_class.__name__}"
+    )
+
+
+def get_model_names(model: ModuleType) -> Tuple[str]:
+    """
+    Returns the prefix, singular version of the prefix and the tags for the model
+
+    :params model: the model module to get the names from
+    :returns: Tuple[str] containing the prefix, singular version of the prefix and the class
+    name for the model
+    """
+    model_name = model.__name__.split(".")[-1].lower()
+    prefix = model_name
+    prefix_singular = prefix.rstrip("s")
+    class_name = prefix_singular.title().replace("_", "")
+    return prefix, prefix_singular, class_name

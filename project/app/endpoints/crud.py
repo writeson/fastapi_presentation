@@ -71,10 +71,10 @@ async def read_items(
 
 
 async def read_item(
-        session: AsyncSession,
-        id: int,
-        input_class: Type[InputType],
-        output_class: Type[OutputType],
+    session: AsyncSession,
+    id: int,
+    input_class: Type[InputType],
+    output_class: Type[OutputType],
 ) -> OutputType:
     """
     Retrieve an item from the database by ID.
@@ -95,14 +95,14 @@ async def read_item(
 
 
 async def read_children_items(
-        session: AsyncSession,
-        parent_id: int,
-        offset: int,
-        limit: int,
-        parent_class: Type[ParentType],
-        input_class: Type[InputType],
-        output_class: Type[OutputType],
-        relationship_name: str,  # Name of the relationship to load
+    session: AsyncSession,
+    parent_id: int,
+    offset: int,
+    limit: int,
+    parent_class: Type[ParentType],
+    input_class: Type[InputType],
+    output_class: Type[OutputType],
+    relationship_name: str,  # Name of the relationship to load
 ) -> OutputType:
     """
     Retrieve child items from the database for a given parent using joinedload.
@@ -116,41 +116,6 @@ async def read_children_items(
 
     if not inspect.isclass(output_class):
         raise ValueError("output_class must be a class object")
-
-    # Validate the relationship name
-    if not hasattr(parent_class, relationship_name):
-        raise ValueError(f"'{parent_class.__name__}' has no relationship '{relationship_name}'")
-
-    # Generate dynamic joinedload options
-    joinedload_options = get_joinedload_options(parent_class, relationship_name)
-
-    # Construct the query with the generated options
-    query = (
-        select(parent_class)
-        .options(*joinedload_options)
-        .where(parent_class.id == parent_id)
-    )
-    result = await session.execute(query)
-    parent_item = result.unique().scalar_one_or_none()
-
-    if parent_item is None:
-        return [], 0  # No parent found
-
-    # Get the children from the loaded relationship
-    children = getattr(parent_item, relationship_name)
-
-    # Ensure children is iterable (in case it's not a list)
-    if not isinstance(children, list):
-        children = [children]
-
-    # Apply offset and limit to the children list
-    paginated_children = children[offset : offset + limit]
-
-    # Query for total count
-    total_count = len(children)
-
-    return [output_class.model_validate(child) for child in paginated_children], total_count
-
 
 
 async def update_item(
@@ -227,7 +192,9 @@ def get_joinedload_options(parent_class, relationship_name):
     """
     relationship = getattr(parent_class, relationship_name, None)
     if not relationship:
-        raise ValueError(f"'{relationship_name}' is not a valid relationship of '{parent_class.__name__}'")
+        raise ValueError(
+            f"'{relationship_name}' is not a valid relationship of '{parent_class.__name__}'"
+        )
 
     # Base joinedload for the main relationship
     options = [joinedload(relationship)]
@@ -236,6 +203,10 @@ def get_joinedload_options(parent_class, relationship_name):
     for rel in parent_class.__mapper__.relationships:
         if rel.key == relationship_name:
             for sub_rel in rel.mapper.relationships:
-                options.append(joinedload(getattr(relationship.property.mapper.class_, sub_rel.key)))
+                options.append(
+                    joinedload(
+                        getattr(relationship.property.mapper.class_, sub_rel.key)
+                    )
+                )
 
     return options

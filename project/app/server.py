@@ -102,66 +102,16 @@ def get_routes_config() -> Dict:
     :return: Dict of router info
     """
     return [
-        {
-            "prefix": "artists",
-            "tags": "Artists",
-            "module": artists,
-            "children_modules": [albums],
-        },
-        {
-            "prefix": "albums",
-            "tags": "Albums",
-            "module": albums,
-            "children_modules": [tracks],
-        },
-        {
-            "prefix": "genres",
-            "tags": "Genres",
-            "module": genres,
-            "children_modules": [],
-        },
-        {
-            "prefix": "tracks",
-            "tags": "Tracks",
-            "module": tracks,
-            "children_modules": [playlists, media_types, genres],
-        },
-        {
-            "prefix": "playlists",
-            "tags": "Playlists",
-            "module": playlists,
-            "children_modules": [],
-        },
-        {
-            "prefix": "media_types",
-            "tags": "Media Types",
-            "module": media_types,
-            "children_modules": [],
-        },
-        {
-            "prefix": "invoices",
-            "tags": "Invoices",
-            "module": invoices,
-            "children_modules": [invoice_items],
-        },
-        {
-            "prefix": "invoice_items",
-            "tags": "Invoice Items",
-            "module": invoice_items,
-            "children_modules": [],
-        },
-        {
-            "prefix": "customers",
-            "tags": "Customers",
-            "module": customers,
-            "children_modules": [],
-        },
-        {
-            "prefix": "employees",
-            "tags": "Employees",
-            "module": employees,
-            "children_modules": [],
-        },
+        {"model": artists, "child_models": [albums]},
+        {"model": albums, "child_models": [tracks]},
+        {"model": genres, "child_models": []},
+        {"model": tracks, "child_models": [playlists, media_types, genres]},
+        {"model": playlists, "child_models": []},
+        {"model": media_types, "child_models": []},
+        {"model": invoices, "child_models": [invoice_items]},
+        {"model": invoice_items, "child_models": []},
+        {"model": customers, "child_models": []},
+        {"model": employees, "child_models": []},
     ]
 
 
