@@ -102,7 +102,6 @@ async def read_children_items(
     parent_class: Type[ParentType],
     input_class: Type[InputType],
     output_class: Type[OutputType],
-    relationship_name: str,  # Name of the relationship to load
 ) -> OutputType:
     """
     Retrieve child items from the database for a given parent using joinedload.
@@ -116,6 +115,44 @@ async def read_children_items(
 
     if not inspect.isclass(output_class):
         raise ValueError("output_class must be a class object")
+
+    # get the parent item
+    query = (
+        select(parent_class.id)
+        .where(parent_class.id == parent_id)
+    )
+    result = await session.execute(query)
+    db_parent_id = result.scalars().one_or_none()
+    if db_parent_id is None:
+        raise HTTPException(status_code=404, detail=f"{parent_class} not found")
+
+    # get the parent attribute to filter with
+    parent_attr = getattr(input_class, f"{parent_class.__name__.split('.')[-1].lower()}_id")
+
+    # Dynamically generate joinedload options based on the relationships in input_class
+    joinedload_options = [
+        joinedload(getattr(input_class, rel.key))  # dynamically load the relationship
+        for rel in input_class.__mapper__.relationships
+    ]
+    
+    query = (
+        select(input_class)
+        .options(*joinedload_options)
+        .where( parent_attr == db_parent_id)
+        .offset(offset)
+        .limit(limit)
+    )
+    result = await session.execute(query)
+    db_items = result.unique().scalars().all()
+
+    # Query for total count
+    count_query = (
+        select(func.count())
+        .where( parent_attr == db_parent_id)
+    )
+    total_count = await session.scalar(count_query)
+
+    return [output_class.model_validate(db_item) for db_item in db_items], total_count
 
 
 async def update_item(

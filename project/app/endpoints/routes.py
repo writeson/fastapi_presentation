@@ -47,7 +47,7 @@ def build_routes(
     create_item_route(**params)
     get_items_route(**params)
     get_item_route(**params)
-    # get_item_children_route(**params)
+    get_item_children_route(**params)
     update_item_route(**params)
     patch_item_route(**params)
     return router
@@ -169,9 +169,10 @@ def get_item_children_route(
         parent_class = getattr(model, f"{class_name}")
         child_prefix = child_model.__name__.split(".")[-1]
         child_local_prefix = child_prefix[:-1]
-        child_class = getattr(child_model, f"{child_local_class_name}")
-        child_read_class = getattr(child_model, f"{child_local_class_name}Read")
-        relationship_name = get_relationship_name(parent_class, child_class)
+
+        _, _, child_class_name = get_model_names(child_model)
+        child_class = getattr(child_model, f"{child_class_name}")
+        child_read_class = getattr(child_model, f"{child_class_name}Read")
 
         # Add the route with the factory-created function
         route_handler = create_child_route(
@@ -180,12 +181,10 @@ def get_item_children_route(
             child_read_class,
             child_prefix,
             child_local_prefix,
-            relationship_name,
         )
         router.add_api_route(
             path=f"/{{id}}/{child_prefix}",
             endpoint=route_handler,
-            tags=[tags],
             response_model=CombinedResponseReadAll[List[child_read_class], int],
             methods=["GET"],
         )
@@ -271,7 +270,6 @@ def create_child_route(
     child_read_class,
     child_prefix: str,
     child_local_prefix: str,
-    relationship_name: str,
 ):
     async def read_item_children(
         id: int = Path(..., title=f"The ID of the {child_local_prefix} to get"),
@@ -288,7 +286,6 @@ def create_child_route(
                 parent_class=parent_class,
                 input_class=child_class,
                 output_class=child_read_class,
-                relationship_name=relationship_name,
             )
             return CombinedResponseReadAll(
                 response=children,
