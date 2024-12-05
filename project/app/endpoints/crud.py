@@ -118,7 +118,7 @@ async def read_children_items(
 
     # get the parent item
     query = (
-        select(parent_class.id)
+        select(parent_class)
         .where(parent_class.id == parent_id)
     )
     result = await session.execute(query)
@@ -129,15 +129,8 @@ async def read_children_items(
     # get the parent attribute to filter with
     parent_attr = getattr(input_class, f"{parent_class.__name__.split('.')[-1].lower()}_id")
 
-    # Dynamically generate joinedload options based on the relationships in input_class
-    joinedload_options = [
-        joinedload(getattr(input_class, rel.key))  # dynamically load the relationship
-        for rel in input_class.__mapper__.relationships
-    ]
-    
     query = (
         select(input_class)
-        .options(*joinedload_options)
         .where( parent_attr == db_parent_id)
         .offset(offset)
         .limit(limit)

@@ -18,6 +18,7 @@ from project.app.models.combined import (
     CombinedResponseUpdate,
     CombinedResponsePatch,
 )
+from project.app.endpoints import children
 
 
 # Create some generic types to use in the code that follows
@@ -47,7 +48,8 @@ def build_routes(
     create_item_route(**params)
     get_items_route(**params)
     get_item_route(**params)
-    get_item_children_route(**params)
+    children.get_routes(**params)
+    # get_item_children_route(**params)
     update_item_route(**params)
     patch_item_route(**params)
     return router
@@ -157,7 +159,7 @@ def get_item_route(
             return CombinedResponseRead(response=item_read.model_validate(db_item))
 
 
-def get_item_children_route(
+def get_item_children_route_1(
     router: APIRouter,
     model: ModuleType,
     child_models: List[ModuleType],

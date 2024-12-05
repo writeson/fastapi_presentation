@@ -108,10 +108,10 @@ class TrackCreate(TrackBase):
 
 
 # Read operation
-class TrackRead(TrackReadBase):
+class TrackRead(TrackBase):
     id: int
-    genre: "GenreRead"
-    media_type: "MediaTypeRead"
+    # genre: "GenreRead"
+    # media_type: "MediaTypeRead"
 
     model_config = ConfigDict(from_attributes=True)
 
