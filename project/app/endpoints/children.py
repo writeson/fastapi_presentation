@@ -20,6 +20,12 @@ from project.app.models.combined import (
     CombinedResponsePatch,
 )
 from project.app.models.albums import Album, AlbumRead
+from project.app.models.tracks import Track, TrackRead
+from project.app.models.playlists import Playlist, PlaylistRead
+from project.app.models.media_types import MediaType, MediaTypeRead
+from project.app.models.genres import Genre, GenreRead
+from project.app.models.invoice_items import InvoiceItem, InvoiceItemRead
+
 
 
 
@@ -38,9 +44,9 @@ def get_routes(
     :params child_models: the child models to build the routes for
     """""
     route_handlers = {
-        "Artist": {
-            "Album": _child_album_handler
-        }
+        "Artist": {"Album": _child_album_handler},
+        "Album": {"Track": _child_track_handler},
+        "Track": {"InvoiceItem": _child_invoice_item_handler},
     }
     # iterate through the child models
     for child_model in child_models:
@@ -54,7 +60,6 @@ def get_routes(
     
 
 def _child_album_handler(router: APIRouter):
-    
     @router.get(
         path="/{id}/albums",
         response_model=CombinedResponseReadAll[List[AlbumRead], int],
@@ -63,7 +68,7 @@ def _child_album_handler(router: APIRouter):
         id: int, offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db),
     ) -> [List[AlbumRead], int]:
         """
-        Retrieve an Artist the database with an paginated
+        Retrieve an Artist the database with a paginated
         list of associated albums
         """
         async with db as session:
@@ -81,7 +86,10 @@ def _child_album_handler(router: APIRouter):
                 raise HTTPException(status_code=404, detail="Albums not found")
             
             # Query for total count of albums
-            count_query = select(func.count()).select_from(Album)
+            count_query = (
+                select(func.count(Album.id))
+                .where(Album.artist_id == id)
+            )
             total_count = await session.scalar(count_query)
         
             albums = [AlbumRead.model_validate(db_album) for db_album in db_albums]
@@ -92,6 +100,168 @@ def _child_album_handler(router: APIRouter):
             )
 
 
+def _child_track_handler(router: APIRouter):
+    @router.get(
+        path="/{id}/tracks",
+        response_model=CombinedResponseReadAll[List[TrackRead], int],
+    )
+    async def read_album_tracks(
+            id: int, offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db),
+    ) -> [List[TrackRead], int]:
+        """
+        Retrieve an Album the database with a paginated
+        list of associated albums
+        """
+        async with db as session:
+            query = (
+                select(Track)
+                .where(Track.album_id == id)
+                .order_by(Track.id)
+                .offset(offset)
+                .limit(limit)
+            )
+            # Execute the query
+            result = await session.execute(query)
+            db_tracks = result.scalars().all()
+            if db_tracks is None:
+                raise HTTPException(status_code=404, detail="Tracks not found")
+
+            # Query for total count of tracks
+            count_query = (
+                select(func.count(Track.id))
+                .where(Track.album_id == id)
+            )
+            total_count = await session.scalar(count_query)
+
+            tracks = [TrackRead.model_validate(db_track) for db_track in db_tracks]
+
+            return CombinedResponseReadAll(
+                response=tracks,
+                total_count=total_count,
+            )
+
+
+def _child_invoice_item_handler(router: APIRouter):
+    @router.get(
+        path="/{id}/invoice_items",
+        response_model=CombinedResponseReadAll[List[InvoiceItemRead], int],
+    )
+    async def read_track_invoice_items(
+            id: int, offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db),
+    ) -> [List[InvoiceItemRead], int]:
+        """
+        Retrieve a Track from the database with a paginated
+        list of associated invoice items
+        """
+        async with db as session:
+            query = (
+                select(InvoiceItem)
+                .where(InvoiceItem.track_id == id)
+                .order_by(InvoiceItem.id)
+                .offset(offset)
+                .limit(limit)
+            )
+            # Execute the query
+            result = await session.execute(query)
+            db_invoice_items = result.scalars().all()
+            if db_invoice_items is None:
+                raise HTTPException(status_code=404, detail="Invoice items not found")
+
+            # Query for total count of invoice items
+            count_query = (
+                select(func.count(InvoiceItem.id))
+                .where(InvoiceItem.track_id == id)
+            )
+            total_count = await session.scalar(count_query)
+
+            invoice_items = [InvoiceItemRead.model_validate(db_invoice_item) for db_invoice_item in db_invoice_items]
+
+            return CombinedResponseReadAll(
+                response=invoice_items,
+                total_count=total_count,
+            )
+
+
+# def _child_media_type_handler(router: APIRouter):
+#     @router.get(
+#         path="/{id}/media_types",
+#         response_model=CombinedResponseReadAll[List[MediaTypeRead], int],
+#     )
+#     async def read_media_types(
+#             id: int, offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db),
+#     ) -> [List[MediaTypeRead], int]:
+#         """
+#         Retrieve a Track the database with a paginated
+#         list of associated media types
+#         """
+#         async with db as session:
+#             query = (
+#                 select(MediaType)
+#                 .where(MediaType.track_id == id)
+#                 .order_by(MediaType.id)
+#                 .offset(offset)
+#                 .limit(limit)
+#             )
+#             # Execute the query
+#             result = await session.execute(query)
+#             db_media_types = result.scalars().all()
+#             if db_media_types is None:
+#                 raise HTTPException(status_code=404, detail="Media types not found")
+# 
+#             # Query for total count of media types
+#             count_query = (
+#                 select(func.count(MediaType.id))
+#                 .where(MediaType.track_id == id)
+#             )
+#             total_count = await session.scalar(count_query)
+# 
+#             media_types = [TrackRead.model_validate(db_media_type) for db_media_type in db_media_types]
+# 
+#             return CombinedResponseReadAll(
+#                 response=media_types,
+#                 total_count=total_count,
+#             )
+# 
+# 
+# def _child_genre_handler(router: APIRouter):
+#     @router.get(
+#         path="/{id}/genres",
+#         response_model=CombinedResponseReadAll[List[GenreRead], int],
+#     )
+#     async def read_track_genres(
+#             id: int, offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db),
+#     ) -> [List[GenreRead], int]:
+#         """
+#         Retrieve a Track the database with a paginated
+#         list of associated genres
+#         """
+#         async with db as session:
+#             query = (
+#                 select(Genre)
+#                 .where(Genre.track_id == id)
+#                 .order_by(Genre.id)
+#                 .offset(offset)
+#                 .limit(limit)
+#             )
+#             # Execute the query
+#             result = await session.execute(query)
+#             db_genres = result.scalars().all()
+#             if db_genres is None:
+#                 raise HTTPException(status_code=404, detail="Genres not found")
+# 
+#             # Query for total count of tracks
+#             count_query = (
+#                 select(func.count(Genre.id))
+#                 .where(Genre.track_id == id)
+#             )
+#             total_count = await session.scalar(count_query)
+# 
+#             genres = [TrackRead.model_validate(db_genre) for db_genre in db_genres]
+# 
+#             return CombinedResponseReadAll(
+#                 response=genres,
+#                 total_count=total_count,
+#             )
 
 
 def get_model_class_name(model: ModuleType) -> Tuple[str]:
