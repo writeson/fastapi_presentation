@@ -104,14 +104,14 @@ def get_routes_config() -> Dict:
     return [
         {"model": artists, "child_models": [albums]},
         {"model": albums, "child_models": [tracks]},
-        {"model": genres, "child_models": []},
-        {"model": tracks, "child_models": [invoice_items]},
-        {"model": playlists, "child_models": []},
-        {"model": media_types, "child_models": []},
-        {"model": invoices, "child_models": []},
+        {"model": tracks, "child_models": [invoice_items, playlists]},
+        {"model": genres, "child_models": [tracks]},
+        {"model": media_types, "child_models": [tracks]},
+        {"model": playlists, "child_models": [tracks]},
+        {"model": invoices, "child_models": [invoice_items]},
         {"model": invoice_items, "child_models": []},
-        {"model": customers, "child_models": []},
-        {"model": employees, "child_models": []},
+        {"model": customers, "child_models": [invoices]},
+        {"model": employees, "child_models": [customers, employees]},
     ]
 
 

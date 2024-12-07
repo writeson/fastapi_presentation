@@ -94,60 +94,6 @@ async def read_item(
     return output_class.model_validate(db_item)
 
 
-async def read_children_items(
-    session: AsyncSession,
-    parent_id: int,
-    offset: int,
-    limit: int,
-    parent_class: Type[ParentType],
-    input_class: Type[InputType],
-    output_class: Type[OutputType],
-) -> OutputType:
-    """
-    Retrieve child items from the database for a given parent using joinedload.
-    Returns the items as the specified output class along with the total count.
-    """
-    if not inspect.isclass(parent_class):
-        raise ValueError("parent_class must be a class object")
-
-    if not inspect.isclass(input_class):
-        raise ValueError("input_class must be a class object")
-
-    if not inspect.isclass(output_class):
-        raise ValueError("output_class must be a class object")
-
-    # get the parent item
-    query = (
-        select(parent_class)
-        .where(parent_class.id == parent_id)
-    )
-    result = await session.execute(query)
-    db_parent_id = result.scalars().one_or_none()
-    if db_parent_id is None:
-        raise HTTPException(status_code=404, detail=f"{parent_class} not found")
-
-    # get the parent attribute to filter with
-    parent_attr = getattr(input_class, f"{parent_class.__name__.split('.')[-1].lower()}_id")
-
-    query = (
-        select(input_class)
-        .where( parent_attr == db_parent_id)
-        .offset(offset)
-        .limit(limit)
-    )
-    result = await session.execute(query)
-    db_items = result.unique().scalars().all()
-
-    # Query for total count
-    count_query = (
-        select(func.count())
-        .where( parent_attr == db_parent_id)
-    )
-    total_count = await session.scalar(count_query)
-
-    return [output_class.model_validate(db_item) for db_item in db_items], total_count
-
-
 async def update_item(
     session: AsyncSession,
     id: int,

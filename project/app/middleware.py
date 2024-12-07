@@ -130,6 +130,9 @@ def build_response_data(
                 page_count = total_count // limit + (
                     1 if total_count % limit != 0 else 0
                 )
+                if page_count == 0:
+                    collection_name = request.url.path.split("/")[-1]
+                    base_meta["status_message"] = f"No {collection_name} found"
                 data["meta_data"] = {
                     **base_meta,
                     "offset": offset,
