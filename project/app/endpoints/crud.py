@@ -159,9 +159,6 @@ async def patch_item(
     return output_class.model_validate(db_item)
 
 
-from sqlalchemy.orm import joinedload
-
-
 def get_joinedload_options(parent_class, relationship_name):
     """
     Generate joinedload options dynamically for a given relationship name.

@@ -3,14 +3,12 @@ from sqlalchemy import Column, Integer
 from sqlmodel import SQLModel, Field, Relationship
 from pydantic import ConfigDict
 
+from .fields import String120Field
+
 
 class ArtistBase(SQLModel):
-    name: str = Field(
-        default=None,
-        description="The name of the artist",
-        title="Artist Name",
-        min_length=0,
-        max_length=120,
+    name: str = String120Field(
+        title="Artist Name", description="The name of the artist", mapped_name="Name"
     )
 
 
@@ -22,7 +20,7 @@ class Artist(ArtistBase, table=True):
         sa_column=Column("ArtistId", Integer, primary_key=True),
         description="The unique identifier for the artist",
     )
-    name: str = Field(sa_column=Column("Name"))
+    # name: str = Field(sa_column=Column("Name"))
 
     albums: List["Album"] = Relationship(back_populates="artist")
 

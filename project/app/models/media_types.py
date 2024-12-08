@@ -3,14 +3,14 @@ from sqlalchemy import Column, Integer
 from sqlmodel import SQLModel, Field, Relationship
 from pydantic import ConfigDict
 
+from .fields import String120Field
+
 
 class MediaTypeBase(SQLModel):
-    name: str = Field(
-        default=None,
-        description="The name of the media type",
+    name: str = String120Field(
         title="Media Type Name",
-        min_length=0,
-        max_length=120,
+        description="The name of the media type",
+        mapped_name="Name",
     )
 
 

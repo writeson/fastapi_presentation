@@ -1,75 +1,74 @@
 from typing import Optional
-from sqlalchemy import Column, Integer, String, Index
+from sqlalchemy import Column, Integer, Index
 from sqlmodel import SQLModel, Field, ForeignKey
 from pydantic import ConfigDict
 
+from .fields import (
+    String10Field,
+    String20Field,
+    String24Field,
+    String40Field,
+    String60Field,
+    String70Field,
+    String80Field,
+)
+
 
 class CustomerBase(SQLModel):
-    first_name: str = Field(
-        default=None,
-        description="The customer's first name",
+    first_name: str = String40Field(
         title="First Name",
-        max_length=40,
+        description="The customer's first name",
+        mapped_name="FirstName",
     )
-    last_name: str = Field(
-        default=None,
-        description="The customer's last name",
+    last_name: str = String20Field(
         title="Last Name",
-        max_length=20,
+        description="The customer's last name",
+        mapped_name="LastName",
     )
-    email: str = Field(
-        default=None,
-        description="The customer's email address",
+    email: str = String60Field(
         title="Email",
-        max_length=60,
+        description="The customer's email address",
+        mapped_name="Email",
     )
-    company: Optional[str] = Field(
-        default=None,
-        description="The customer's company",
+    company: Optional[str] = String80Field(
         title="Company",
-        max_length=80,
+        description="The customer's company",
+        mapped_name="Company",
     )
-    address: Optional[str] = Field(
-        default=None,
-        description="The customer's address",
+    address: Optional[str] = String70Field(
         title="Address",
-        max_length=70,
+        description="The customer's address",
+        mapped_name="Address",
     )
-    city: Optional[str] = Field(
-        default=None,
-        description="The customer's city",
+    city: Optional[str] = String40Field(
         title="City",
-        max_length=40,
+        description="The customer's city",
+        mapped_name="City",
     )
-    state: Optional[str] = Field(
-        default=None,
-        description="The customer's state",
+    state: Optional[str] = String40Field(
         title="State",
-        max_length=40,
+        description="The customer's state",
+        mapped_name="State",
     )
-    country: Optional[str] = Field(
-        default=None,
-        description="The customer's country",
+    country: Optional[str] = String40Field(
         title="Country",
-        max_length=40,
+        description="The customer's country",
+        mapped_name="Country",
     )
-    postal_code: Optional[str] = Field(
-        default=None,
-        description="The customer's postal code",
+    postal_code: Optional[str] = String10Field(
         title="Postal Code",
-        max_length=10,
+        description="The customer's postal code",
+        mapped_name="PostalCode",
     )
-    phone: Optional[str] = Field(
-        default=None,
-        description="The customer's phone number",
+    phone: Optional[str] = String24Field(
         title="Phone",
-        max_length=24,
+        description="The customer's phone number",
+        mapped_name="Phone",
     )
-    fax: Optional[str] = Field(
-        default=None,
-        description="The customer's fax number",
+    fax: Optional[str] = String24Field(
         title="Fax",
-        max_length=24,
+        description="The customer's fax number",
+        mapped_name="Fax",
     )
 
 
@@ -81,17 +80,17 @@ class Customer(CustomerBase, table=True):
         sa_column=Column("CustomerId", Integer, primary_key=True),
         description="The unique identifier for the customer",
     )
-    first_name: str = Field(sa_column=Column("FirstName", String(40)))
-    last_name: str = Field(sa_column=Column("LastName", String(20)))
-    email: str = Field(sa_column=Column("Email", String(60)))
-    company: Optional[str] = Field(sa_column=Column("Company", String(80)))
-    address: Optional[str] = Field(sa_column=Column("Address", String(70)))
-    city: Optional[str] = Field(sa_column=Column("City", String(40)))
-    state: Optional[str] = Field(sa_column=Column("State", String(40)))
-    country: Optional[str] = Field(sa_column=Column("Country", String(40)))
-    postal_code: Optional[str] = Field(sa_column=Column("PostalCode", String(10)))
-    phone: Optional[str] = Field(sa_column=Column("Phone", String(24)))
-    fax: Optional[str] = Field(sa_column=Column("Fax", String(24)))
+    # first_name: str = Field(sa_column=Column("FirstName", String(40)))
+    # last_name: str = Field(sa_column=Column("LastName", String(20)))
+    # email: str = Field(sa_column=Column("Email", String(60)))
+    # company: Optional[str] = Field(sa_column=Column("Company", String(80)))
+    # address: Optional[str] = Field(sa_column=Column("Address", String(70)))
+    # city: Optional[str] = Field(sa_column=Column("City", String(40)))
+    # state: Optional[str] = Field(sa_column=Column("State", String(40)))
+    # country: Optional[str] = Field(sa_column=Column("Country", String(40)))
+    # postal_code: Optional[str] = Field(sa_column=Column("PostalCode", String(10)))
+    # phone: Optional[str] = Field(sa_column=Column("Phone", String(24)))
+    # fax: Optional[str] = Field(sa_column=Column("Fax", String(24)))
     support_rep_id: Optional[int] = Field(
         default=None,
         sa_column=Column("SupportRepId", Integer, ForeignKey("employees.EmployeeId")),

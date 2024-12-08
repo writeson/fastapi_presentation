@@ -35,7 +35,6 @@ class MetaDataReadAll(MetaData):
     offset: int = Field(default=0, ge=0, description="Offset value")
     limit: int = Field(default=0, ge=0, description="Limit value")
     total_count: int = Field(default=0, ge=0, description="Total number of records")
-    
 
 
 class MetaDataReadOne(MetaData):

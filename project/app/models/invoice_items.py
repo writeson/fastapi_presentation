@@ -7,10 +7,14 @@ from pydantic import ConfigDict
 
 class InvoiceItemBase(SQLModel):
     unit_price: Decimal = Field(
+        ge=0,
+        title="Unit Price",
         description="The unit price of the item",
         sa_column=Column("UnitPrice", Numeric(10, 2), nullable=False),
     )
     quantity: int = Field(
+        ge=0,
+        title="Quantity",
         description="The quantity of items",
         sa_column=Column("Quantity", Integer, nullable=False),
     )
@@ -25,15 +29,19 @@ class InvoiceItem(InvoiceItemBase, table=True):
         description="The unique identifier for the invoice line item",
     )
     invoice_id: int = Field(
+        ge=0,
         sa_column=Column(
             "InvoiceId", Integer, ForeignKey("invoices.InvoiceId"), nullable=False
         ),
+        title="Key to Invoice",
         description="Foreign key to the invoice",
     )
     track_id: int = Field(
+        ge=0,
         sa_column=Column(
             "TrackId", Integer, ForeignKey("tracks.TrackId"), nullable=False
         ),
+        title="Key to Track",
         description="Foreign key to the track",
     )
 

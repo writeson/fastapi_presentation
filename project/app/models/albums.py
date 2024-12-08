@@ -1,17 +1,19 @@
 from typing import Optional, List
+
 from sqlalchemy import Column, Integer, Index, ForeignKey
 from sqlmodel import SQLModel, Field, Relationship
 from pydantic import ConfigDict
 
+from .fields import String160Field
+
 
 class AlbumBase(SQLModel):
-    title: str = Field(
-        default=None,
-        description="The title of the album",
+    title: str = String160Field(
         title="Album Title",
-        max_length=120,
+        description="The title of the album",
+        mapped_name="Title",
     )
-    artist_id: int = Field(foreign_key="artists.ArtistId")
+    # artist_id: int = Field(foreign_key="artists.ArtistId")
 
 
 class Album(AlbumBase, table=True):
@@ -22,7 +24,7 @@ class Album(AlbumBase, table=True):
         sa_column=Column("AlbumId", Integer, primary_key=True),
         description="The unique identifier for the album",
     )
-    title: str = Field(sa_column=Column("Title"))
+    # title: str = Field(sa_column=Column("Title"))
     artist_id: int = Field(
         sa_column=Column("ArtistId", Integer, ForeignKey("artists.ArtistId")),
     )

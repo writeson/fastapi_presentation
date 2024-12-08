@@ -3,14 +3,14 @@ from sqlalchemy import Column, Integer
 from sqlmodel import SQLModel, Field, Relationship
 from pydantic import ConfigDict
 
+from .fields import String120Field
+
 
 class GenreBase(SQLModel):
-    name: str = Field(
-        default=None,
-        description="The name of the genre",
+    name: str = String120Field(
         title="Genre Name",
-        min_length=0,
-        max_length=120,
+        description="The name of the genre",
+        mapped_name="Name",
     )
 
 

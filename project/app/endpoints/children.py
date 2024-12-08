@@ -1,7 +1,7 @@
-from typing import List, Tuple, TypeVar
+from typing import List, Tuple
 from types import ModuleType
 
-from fastapi import APIRouter, Depends, Path, status, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -28,7 +28,7 @@ def get_routes(
     :params router: the router to add the routes to
     :params model: the model to build the routes for
     :params child_models: the child models to build the routes for
-    """""
+    """ ""
     route_handlers = {
         "Artist": {"Album": _child_album_handler},
         "Album": {"Track": _child_track_handler},
@@ -41,21 +41,23 @@ def get_routes(
         "Playlist": {"Track": _child_playlist_track_handler},
         "Invoice": {"InvoiceItem": _child_invoice_invoice_item_handler},
         "Customer": {"Invoice": _child_customer_invoice_handler},
-        "Employee":  {
+        "Employee": {
             "Customer": _child_employee_customer_handler,
             "Employee": _child_employee_employee_hander,
-        }
+        },
     }
     # iterate through the child models
     for child_model in child_models:
         class_name = get_model_class_name(model)
         child_class_name = get_model_class_name(child_model)
-        
+
         # create the child route
-        route_handler_func = route_handlers.get(class_name, {}).get(child_class_name, None)
+        route_handler_func = route_handlers.get(class_name, {}).get(
+            child_class_name, None
+        )
         if route_handler_func is not None:
             route_handler_func(router)
-    
+
 
 def _child_album_handler(router: APIRouter):
     @router.get(
@@ -63,7 +65,10 @@ def _child_album_handler(router: APIRouter):
         response_model=CombinedResponseReadAll[List[AlbumRead], int],
     )
     async def read_artist_albums(
-        id: int, offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db),
+        id: int,
+        offset: int = 0,
+        limit: int = 10,
+        db: AsyncSession = Depends(get_db),
     ) -> [List[AlbumRead], int]:
         """
         Retrieve an Artist the database with a paginated
@@ -80,16 +85,13 @@ def _child_album_handler(router: APIRouter):
             # Execute the query
             result = await session.execute(query)
             db_albums = result.scalars().all()
-            
+
             # Query for total count of albums
-            count_query = (
-                select(func.count(Album.id))
-                .where(Album.artist_id == id)
-            )
+            count_query = select(func.count(Album.id)).where(Album.artist_id == id)
             total_count = await session.scalar(count_query)
-        
+
             albums = [AlbumRead.model_validate(db_album) for db_album in db_albums]
-            
+
             return CombinedResponseReadAll(
                 response=albums,
                 total_count=total_count,
@@ -102,7 +104,10 @@ def _child_track_handler(router: APIRouter):
         response_model=CombinedResponseReadAll[List[TrackRead], int],
     )
     async def read_album_tracks(
-            id: int, offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db),
+        id: int,
+        offset: int = 0,
+        limit: int = 10,
+        db: AsyncSession = Depends(get_db),
     ) -> [List[TrackRead], int]:
         """
         Retrieve an Album the database with a paginated
@@ -121,10 +126,7 @@ def _child_track_handler(router: APIRouter):
             db_tracks = result.scalars().all()
 
             # Query for total count of tracks
-            count_query = (
-                select(func.count(Track.id))
-                .where(Track.album_id == id)
-            )
+            count_query = select(func.count(Track.id)).where(Track.album_id == id)
             total_count = await session.scalar(count_query)
 
             tracks = [TrackRead.model_validate(db_track) for db_track in db_tracks]
@@ -141,7 +143,10 @@ def _child_invoice_item_handler(router: APIRouter):
         response_model=CombinedResponseReadAll[List[InvoiceItemRead], int],
     )
     async def read_track_invoice_items(
-            id: int, offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db),
+        id: int,
+        offset: int = 0,
+        limit: int = 10,
+        db: AsyncSession = Depends(get_db),
     ) -> [List[InvoiceItemRead], int]:
         """
         Retrieve a Track from the database with a paginated
@@ -160,13 +165,15 @@ def _child_invoice_item_handler(router: APIRouter):
             db_invoice_items = result.scalars().all()
 
             # Query for total count of invoice items
-            count_query = (
-                select(func.count(InvoiceItem.id))
-                .where(InvoiceItem.track_id == id)
+            count_query = select(func.count(InvoiceItem.id)).where(
+                InvoiceItem.track_id == id
             )
             total_count = await session.scalar(count_query)
 
-            invoice_items = [InvoiceItemRead.model_validate(db_invoice_item) for db_invoice_item in db_invoice_items]
+            invoice_items = [
+                InvoiceItemRead.model_validate(db_invoice_item)
+                for db_invoice_item in db_invoice_items
+            ]
 
             return CombinedResponseReadAll(
                 response=invoice_items,
@@ -180,7 +187,10 @@ def _child_track_playlist_handler(router: APIRouter):
         response_model=CombinedResponseReadAll[List[PlaylistRead], int],
     )
     async def read_track_playlists(
-            id: int, offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db),
+        id: int,
+        offset: int = 0,
+        limit: int = 10,
+        db: AsyncSession = Depends(get_db),
     ) -> [List[PlaylistRead], int]:
         """
         Retrieve a Track from the database with a paginated
@@ -189,9 +199,13 @@ def _child_track_playlist_handler(router: APIRouter):
         async with db as session:
             query = (
                 select(Playlist)
-                .join(PlaylistTrack, PlaylistTrack.playlist_id == Playlist.id)  # Join Playlist to playlist_track
-                .join(Track, PlaylistTrack.track_id == Track.id)                # Join playlist_track to Track
-                .where(Track.id == id)                                             # Filter by the track ID
+                .join(
+                    PlaylistTrack, PlaylistTrack.playlist_id == Playlist.id
+                )  # Join Playlist to playlist_track
+                .join(
+                    Track, PlaylistTrack.track_id == Track.id
+                )  # Join playlist_track to Track
+                .where(Track.id == id)  # Filter by the track ID
                 .order_by(Playlist.id)
                 .offset(offset)
                 .limit(limit)
@@ -203,13 +217,19 @@ def _child_track_playlist_handler(router: APIRouter):
             # Query for total count of playlists
             count_query = (
                 select(func.count(Playlist.id))
-                .join(PlaylistTrack, PlaylistTrack.playlist_id == Playlist.id)  # Join Playlist to playlist_track
-                .join(Track, PlaylistTrack.track_id == Track.id)                # Join playlist_track to Track
+                .join(
+                    PlaylistTrack, PlaylistTrack.playlist_id == Playlist.id
+                )  # Join Playlist to playlist_track
+                .join(
+                    Track, PlaylistTrack.track_id == Track.id
+                )  # Join playlist_track to Track
                 .where(Track.id == id)
             )
             total_count = await session.scalar(count_query)
 
-            playlists = [PlaylistRead.model_validate(db_playlist) for db_playlist in db_playlists]
+            playlists = [
+                PlaylistRead.model_validate(db_playlist) for db_playlist in db_playlists
+            ]
 
             return CombinedResponseReadAll(
                 response=playlists,
@@ -223,7 +243,10 @@ def _child_genre_track_handler(router: APIRouter):
         response_model=CombinedResponseReadAll[List[TrackRead], int],
     )
     async def read_tracks(
-            id: int, offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db),
+        id: int,
+        offset: int = 0,
+        limit: int = 10,
+        db: AsyncSession = Depends(get_db),
     ) -> [List[TrackRead], int]:
         """
         Retrieve a Genre the database with a paginated
@@ -242,10 +265,7 @@ def _child_genre_track_handler(router: APIRouter):
             db_tracks = result.scalars().all()
 
             # Query for total count of media types
-            count_query = (
-                select(func.count(Track.id))
-                .where(Track.genre_id == id)
-            )
+            count_query = select(func.count(Track.id)).where(Track.genre_id == id)
             total_count = await session.scalar(count_query)
 
             tracks = [TrackRead.model_validate(db_track) for db_track in db_tracks]
@@ -262,7 +282,10 @@ def _child_media_type_track_handler(router: APIRouter):
         response_model=CombinedResponseReadAll[List[TrackRead], int],
     )
     async def read_tracks(
-            id: int, offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db),
+        id: int,
+        offset: int = 0,
+        limit: int = 10,
+        db: AsyncSession = Depends(get_db),
     ) -> [List[TrackRead], int]:
         """
         Retrieve a MediaType the database with a paginated
@@ -281,10 +304,7 @@ def _child_media_type_track_handler(router: APIRouter):
             db_tracks = result.scalars().all()
 
             # Query for total count of media types
-            count_query = (
-                select(func.count(Track.id))
-                .where(Track.media_type_id == id)
-            )
+            count_query = select(func.count(Track.id)).where(Track.media_type_id == id)
             total_count = await session.scalar(count_query)
 
             tracks = [TrackRead.model_validate(db_track) for db_track in db_tracks]
@@ -301,7 +321,10 @@ def _child_playlist_track_handler(router: APIRouter):
         response_model=CombinedResponseReadAll[List[TrackRead], int],
     )
     async def read_playlists_track(
-            id: int, offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db),
+        id: int,
+        offset: int = 0,
+        limit: int = 10,
+        db: AsyncSession = Depends(get_db),
     ) -> [List[TrackRead], int]:
         """
         Retrieve a Track from the database with a paginated
@@ -344,7 +367,10 @@ def _child_invoice_invoice_item_handler(router: APIRouter):
         response_model=CombinedResponseReadAll[List[InvoiceItemRead], int],
     )
     async def read_invoice_items(
-            id: int, offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db),
+        id: int,
+        offset: int = 0,
+        limit: int = 10,
+        db: AsyncSession = Depends(get_db),
     ) -> [List[InvoiceItemRead], int]:
         """
         Retrieve a Invoice the database with a paginated
@@ -363,13 +389,15 @@ def _child_invoice_invoice_item_handler(router: APIRouter):
             db_invoice_items = result.scalars().all()
 
             # Query for total count of invoice items
-            count_query = (
-                select(func.count(InvoiceItem.id))
-                .where(InvoiceItem.invoice_id == id)
+            count_query = select(func.count(InvoiceItem.id)).where(
+                InvoiceItem.invoice_id == id
             )
             total_count = await session.scalar(count_query)
 
-            invoice_items = [InvoiceItemRead.model_validate(db_invoice_item) for db_invoice_item in db_invoice_items]
+            invoice_items = [
+                InvoiceItemRead.model_validate(db_invoice_item)
+                for db_invoice_item in db_invoice_items
+            ]
 
             return CombinedResponseReadAll(
                 response=invoice_items,
@@ -383,7 +411,10 @@ def _child_customer_invoice_handler(router: APIRouter):
         response_model=CombinedResponseReadAll[List[InvoiceRead], int],
     )
     async def read_invoices(
-            id: int, offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db),
+        id: int,
+        offset: int = 0,
+        limit: int = 10,
+        db: AsyncSession = Depends(get_db),
     ) -> [List[InvoiceItemRead], int]:
         """
         Retrieve a Invoice the database with a paginated
@@ -402,13 +433,14 @@ def _child_customer_invoice_handler(router: APIRouter):
             db_invoices = result.scalars().all()
 
             # Query for total count of invoice items
-            count_query = (
-                select(func.count(Invoice.id))
-                .where(Invoice.customer_id == id)
+            count_query = select(func.count(Invoice.id)).where(
+                Invoice.customer_id == id
             )
             total_count = await session.scalar(count_query)
 
-            invoices = [InvoiceRead.model_validate(db_invoice) for db_invoice in db_invoices]
+            invoices = [
+                InvoiceRead.model_validate(db_invoice) for db_invoice in db_invoices
+            ]
 
             return CombinedResponseReadAll(
                 response=invoices,
@@ -422,7 +454,10 @@ def _child_employee_customer_handler(router: APIRouter):
         response_model=CombinedResponseReadAll[List[CustomerRead], int],
     )
     async def read_customers(
-            id: int, offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db),
+        id: int,
+        offset: int = 0,
+        limit: int = 10,
+        db: AsyncSession = Depends(get_db),
     ) -> [List[CustomerRead], int]:
         """
         Retrieve an Employee the database with a paginated
@@ -441,13 +476,14 @@ def _child_employee_customer_handler(router: APIRouter):
             db_customers = result.scalars().all()
 
             # Query for total count of invoice items
-            count_query = (
-                select(func.count(Customer.id))
-                .where(Customer.support_rep_id == id)
+            count_query = select(func.count(Customer.id)).where(
+                Customer.support_rep_id == id
             )
             total_count = await session.scalar(count_query)
 
-            customers = [CustomerRead.model_validate(db_customer) for db_customer in db_customers]
+            customers = [
+                CustomerRead.model_validate(db_customer) for db_customer in db_customers
+            ]
 
             return CombinedResponseReadAll(
                 response=customers,
@@ -461,7 +497,10 @@ def _child_employee_employee_hander(router: APIRouter):
         response_model=CombinedResponseReadAll[List[EmployeeRead], int],
     )
     async def read_employee_reports(
-            id: int, offset: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db),
+        id: int,
+        offset: int = 0,
+        limit: int = 10,
+        db: AsyncSession = Depends(get_db),
     ) -> [List[EmployeeRead], int]:
         """
         Retrieve an Employee the database with a paginated
@@ -480,13 +519,14 @@ def _child_employee_employee_hander(router: APIRouter):
             db_employees = result.scalars().all()
 
             # Query for total count of invoice items
-            count_query = (
-                select(func.count(Employee.id))
-                .where(Employee.reports_to == id)
+            count_query = select(func.count(Employee.id)).where(
+                Employee.reports_to == id
             )
             total_count = await session.scalar(count_query)
 
-            employees = [EmployeeRead.model_validate(db_employee) for db_employee in db_employees]
+            employees = [
+                EmployeeRead.model_validate(db_employee) for db_employee in db_employees
+            ]
 
             return CombinedResponseReadAll(
                 response=employees,

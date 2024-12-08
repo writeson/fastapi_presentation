@@ -4,14 +4,14 @@ from sqlmodel import Field, Relationship, SQLModel
 from pydantic import ConfigDict
 
 from .playlist_track import PlaylistTrack
+from .fields import String120Field
 
 
 class PlaylistBase(SQLModel):
-    name: Optional[str] = Field(
-        default=None,
-        max_length=120,
+    name: Optional[str] = String120Field(
         title="Playlist name",
         description="The name of the playlist",
+        mapped_name="Name",
     )
 
 
