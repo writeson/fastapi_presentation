@@ -3,6 +3,7 @@ from types import ModuleType
 
 from fastapi import APIRouter, Depends, Path, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from project.app.database import get_db
 from project.app.endpoints import crud
@@ -49,7 +50,6 @@ def build_routes(
     get_items_route(**params)
     get_item_route(**params)
     children.get_routes(**params)
-    # get_item_children_route(**params)
     update_item_route(**params)
     patch_item_route(**params)
     return router
@@ -157,39 +157,6 @@ def get_item_route(
                 )
             item_read = getattr(model, f"{class_name}Read")
             return CombinedResponseRead(response=item_read.model_validate(db_item))
-
-
-def get_item_children_route_1(
-    router: APIRouter,
-    model: ModuleType,
-    child_models: List[ModuleType],
-):
-    prefix, prefix_singular, class_name = get_model_names(model)
-
-    # Build children routes
-    for child_model in child_models:
-        parent_class = getattr(model, f"{class_name}")
-        child_prefix = child_model.__name__.split(".")[-1]
-        child_local_prefix = child_prefix[:-1]
-
-        _, _, child_class_name = get_model_names(child_model)
-        child_class = getattr(child_model, f"{child_class_name}")
-        child_read_class = getattr(child_model, f"{child_class_name}Read")
-
-        # Add the route with the factory-created function
-        route_handler = create_child_route(
-            parent_class,
-            child_class,
-            child_read_class,
-            child_prefix,
-            child_local_prefix,
-        )
-        router.add_api_route(
-            path=f"/{{id}}/{child_prefix}",
-            endpoint=route_handler,
-            response_model=CombinedResponseReadAll[List[child_read_class], int],
-            methods=["GET"],
-        )
 
 
 def update_item_route(
