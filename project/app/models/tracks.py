@@ -21,7 +21,7 @@ class TrackBase(SQLModel):
         title="Track Length",
         description="The length of the track in milliseconds",
     )
-    unit_price: condecimal(ge=0, max_digits=10, decimal_places=2) = Field(
+    unit_price: condecimal(ge=0.0, le=10.0, max_digits=4, decimal_places=2) = Field(
         sa_column=Column("UnitPrice", Numeric(10, 2)),
         title="Track Price",
         description="The price of the track",
