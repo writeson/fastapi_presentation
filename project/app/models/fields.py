@@ -2,7 +2,6 @@
 
 from enum import Enum
 from typing import NamedTuple
-from functools import partial
 
 from sqlalchemy import Column
 from sqlmodel import Field
@@ -41,11 +40,11 @@ class ValidationConstant(Enum):
 
 
 def create_string_field(
+    title: str,
+    description: str,
     validation_constant: ValidationConstant,
     default: str = "",
     nullable: bool = True,
-    title: str = "",
-    description: str = "",
     mapped_name: str = "",
 ) -> Field:
     """
@@ -59,18 +58,3 @@ def create_string_field(
         description=description,
         sa_column=Column(mapped_name, nullable=nullable),
     )
-
-
-# Create partial functions for specific field types
-String10Field = partial(create_string_field, ValidationConstant.STRING_10)
-String20Field = partial(create_string_field, ValidationConstant.STRING_20)
-String24Field = partial(create_string_field, ValidationConstant.STRING_24)
-String30Field = partial(create_string_field, ValidationConstant.STRING_30)
-String40Field = partial(create_string_field, ValidationConstant.STRING_40)
-String60Field = partial(create_string_field, ValidationConstant.STRING_60)
-String70Field = partial(create_string_field, ValidationConstant.STRING_70)
-String80Field = partial(create_string_field, ValidationConstant.STRING_80)
-String120Field = partial(create_string_field, ValidationConstant.STRING_120)
-String160Field = partial(create_string_field, ValidationConstant.STRING_160)
-String200Field = partial(create_string_field, ValidationConstant.STRING_200)
-String220Field = partial(create_string_field, ValidationConstant.STRING_220)

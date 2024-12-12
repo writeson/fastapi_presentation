@@ -1,73 +1,100 @@
 from typing import Optional
+from functools import partial
+
 from sqlalchemy import Column, Integer, Index
 from sqlmodel import SQLModel, Field, ForeignKey
 from pydantic import ConfigDict
 
-from .fields import (
-    String10Field,
-    String20Field,
-    String24Field,
-    String40Field,
-    String60Field,
-    String70Field,
-    String80Field,
+from .fields import ValidationConstant, create_string_field
+
+FirstNameField = partial(
+    create_string_field,
+    "First Name",
+    "The customer's first name",
+    ValidationConstant.STRING_40,
+)
+LastNameField = partial(
+    create_string_field,
+    "Last Name",
+    "The customer's last name",
+    ValidationConstant.STRING_20,
+)
+EmailField = partial(
+    create_string_field, "Email", "The customer's email", ValidationConstant.STRING_60
+)
+CompanyField = partial(
+    create_string_field,
+    "Company",
+    "The customer's company",
+    ValidationConstant.STRING_80,
+)
+AddressField = partial(
+    create_string_field,
+    "Address",
+    "The customer's address",
+    ValidationConstant.STRING_70,
+)
+CityField = partial(
+    create_string_field, "City", "The customer's city", ValidationConstant.STRING_40
+)
+StateField = partial(
+    create_string_field, "State", "The customer's state", ValidationConstant.STRING_40
+)
+CountryField = partial(
+    create_string_field,
+    "Country",
+    "The customer's country",
+    ValidationConstant.STRING_40,
+)
+PostalCodeField = partial(
+    create_string_field,
+    "Postal Code",
+    "The customer's postal code",
+    ValidationConstant.STRING_10,
+)
+PhoneField = partial(
+    create_string_field, "Phone", "The customer's phone", ValidationConstant.STRING_24
+)
+FaxField = partial(
+    create_string_field,
+    "Fax",
+    "The customer's fax number",
+    ValidationConstant.STRING_24,
 )
 
 
 class CustomerBase(SQLModel):
-    first_name: str = String40Field(
-        title="First Name",
-        description="The customer's first name",
+    first_name: str = FirstNameField(
         mapped_name="FirstName",
     )
-    last_name: str = String20Field(
-        title="Last Name",
-        description="The customer's last name",
+    last_name: str = LastNameField(
         mapped_name="LastName",
     )
-    email: str = String60Field(
-        title="Email",
-        description="The customer's email address",
+    email: str = EmailField(
         mapped_name="Email",
     )
-    company: Optional[str] = String80Field(
-        title="Company",
-        description="The customer's company",
+    company: Optional[str] = CompanyField(
         mapped_name="Company",
     )
-    address: Optional[str] = String70Field(
-        title="Address",
-        description="The customer's address",
+    address: Optional[str] = AddressField(
         mapped_name="Address",
     )
-    city: Optional[str] = String40Field(
-        title="City",
-        description="The customer's city",
+    city: Optional[str] = CityField(
         mapped_name="City",
     )
-    state: Optional[str] = String40Field(
-        title="State",
-        description="The customer's state",
+    state: Optional[str] = StateField(
         mapped_name="State",
     )
-    country: Optional[str] = String40Field(
-        title="Country",
-        description="The customer's country",
+    country: Optional[str] = CountryField(
         mapped_name="Country",
     )
-    postal_code: Optional[str] = String10Field(
-        title="Postal Code",
-        description="The customer's postal code",
+    postal_code: Optional[str] = PostalCodeField(
         mapped_name="PostalCode",
     )
-    phone: Optional[str] = String24Field(
-        title="Phone",
-        description="The customer's phone number",
+    phone: Optional[str] = PhoneField(
         mapped_name="Phone",
     )
-    fax: Optional[str] = String24Field(
-        title="Fax",
-        description="The customer's fax number",
+    fax: Optional[str] = FaxField(
         mapped_name="Fax",
     )
 
@@ -80,17 +107,6 @@ class Customer(CustomerBase, table=True):
         sa_column=Column("CustomerId", Integer, primary_key=True),
         description="The unique identifier for the customer",
     )
-    # first_name: str = Field(sa_column=Column("FirstName", String(40)))
-    # last_name: str = Field(sa_column=Column("LastName", String(20)))
-    # email: str = Field(sa_column=Column("Email", String(60)))
-    # company: Optional[str] = Field(sa_column=Column("Company", String(80)))
-    # address: Optional[str] = Field(sa_column=Column("Address", String(70)))
-    # city: Optional[str] = Field(sa_column=Column("City", String(40)))
-    # state: Optional[str] = Field(sa_column=Column("State", String(40)))
-    # country: Optional[str] = Field(sa_column=Column("Country", String(40)))
-    # postal_code: Optional[str] = Field(sa_column=Column("PostalCode", String(10)))
-    # phone: Optional[str] = Field(sa_column=Column("Phone", String(24)))
-    # fax: Optional[str] = Field(sa_column=Column("Fax", String(24)))
     support_rep_id: Optional[int] = Field(
         default=None,
         sa_column=Column("SupportRepId", Integer, ForeignKey("employees.EmployeeId")),
@@ -115,9 +131,29 @@ class CustomerRead(CustomerBase):
 
 # Update operation (Put)
 class CustomerUpdate(CustomerBase):
-    pass
+    first_name: str = FirstNameField()
+    last_name: str = LastNameField()
+    email: str = EmailField()
+    company: Optional[str] = CompanyField()
+    address: Optional[str] = AddressField()
+    city: Optional[str] = CityField()
+    state: Optional[str] = StateField()
+    country: Optional[str] = CountryField()
+    postal_code: Optional[str] = PostalCodeField()
+    phone: Optional[str] = PhoneField()
+    fax: Optional[str] = FaxField()
 
 
 # Patch operation
 class CustomerPatch(CustomerBase):
-    pass
+    first_name: Optional[str] = FirstNameField()
+    last_name: Optional[str] = LastNameField()
+    email: Optional[str] = EmailField()
+    company: Optional[str] = CompanyField()
+    address: Optional[str] = AddressField()
+    city: Optional[str] = CityField()
+    state: Optional[str] = StateField()
+    country: Optional[str] = CountryField()
+    postal_code: Optional[str] = PostalCodeField()
+    phone: Optional[str] = PhoneField()
+    fax: Optional[str] = FaxField()

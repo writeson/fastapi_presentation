@@ -1,34 +1,76 @@
 from typing import Optional, List
+from functools import partial
 from datetime import datetime
 from sqlalchemy import Column, Integer, DateTime, ForeignKey, Index
 from sqlmodel import SQLModel, Field, Relationship
 from pydantic import ConfigDict
 
-from .fields import (
-    String10Field,
-    String20Field,
-    String30Field,
-    String24Field,
-    String40Field,
-    String60Field,
-    String70Field,
+from .fields import ValidationConstant, create_string_field
+
+FirstNameField = partial(
+    create_string_field,
+    "First Name",
+    "The employee's first name",
+    ValidationConstant.STRING_20,
+)
+LastNameField = partial(
+    create_string_field,
+    "Last Name",
+    "The employee's last name",
+    ValidationConstant.STRING_20,
+)
+TitleField = partial(
+    create_string_field,
+    "Title",
+    "The employee's job title",
+    ValidationConstant.STRING_30,
+)
+AddressField = partial(
+    create_string_field,
+    "Address",
+    "The employee's address",
+    ValidationConstant.STRING_70,
+)
+CityField = partial(
+    create_string_field, "City", "The employee's city", ValidationConstant.STRING_40
+)
+StateField = partial(
+    create_string_field, "State", "The employee's state", ValidationConstant.STRING_40
+)
+CountryField = partial(
+    create_string_field,
+    "Country",
+    "The employee's country",
+    ValidationConstant.STRING_40,
+)
+PostalCodeField = partial(
+    create_string_field,
+    "Postal Code",
+    "The employee's postal code",
+    ValidationConstant.STRING_10,
+)
+PhoneField = partial(
+    create_string_field, "Phone", "The employee's phone", ValidationConstant.STRING_24
+)
+FaxField = partial(
+    create_string_field,
+    "Fax",
+    "The employee's fax number",
+    ValidationConstant.STRING_24,
+)
+EmailField = partial(
+    create_string_field, "Email", "The employee's email", ValidationConstant.STRING_60
 )
 
 
 class EmployeeBase(SQLModel):
-    first_name: str = String20Field(
-        title="First Name",
-        description="The employee's first name",
+    first_name: str = FirstNameField(
         mapped_name="FirstName",
     )
-    last_name: str = String20Field(
-        title="Last Name",
-        description="The employee's last name",
+    last_name: str = LastNameField(
         mapped_name="LastName",
     )
-    title: Optional[str] = String30Field(
-        title="Title",
-        description="The employee's job title",
+    title: Optional[str] = TitleField(
         mapped_name="Title",
     )
     birth_date: Optional[datetime] = Field(
@@ -41,44 +83,28 @@ class EmployeeBase(SQLModel):
         description="The employee's hire date",
         sa_column=Column("HireDate", DateTime),
     )
-    address: Optional[str] = String70Field(
-        title="Address",
-        description="The employee's address",
+    address: Optional[str] = AddressField(
         mapped_name="Address",
     )
-    city: Optional[str] = String40Field(
-        title="City",
-        description="The employee's city",
+    city: Optional[str] = CityField(
         mapped_name="City",
     )
-    state: Optional[str] = String40Field(
-        title="State",
-        description="The employee's state",
+    state: Optional[str] = StateField(
         mapped_name="State",
     )
-    country: Optional[str] = String40Field(
-        title="Country",
-        description="The employee's country",
+    country: Optional[str] = CountryField(
         mapped_name="Country",
     )
-    postal_code: Optional[str] = String10Field(
-        title="Postal Code",
-        description="The employee's postal code",
+    postal_code: Optional[str] = PostalCodeField(
         mapped_name="PostalCode",
     )
-    phone: Optional[str] = String24Field(
-        title="Phone",
-        description="The employee's phone number",
+    phone: Optional[str] = PhoneField(
         mapped_name="Phone",
     )
-    fax: Optional[str] = String24Field(
-        title="Fax",
-        description="The employee's fax number",
+    fax: Optional[str] = FaxField(
         mapped_name="Fax",
     )
-    email: Optional[str] = String60Field(
-        title="Email",
-        description="The employee's email address",
+    email: Optional[str] = EmailField(
         mapped_name="Email",
     )
 
@@ -91,19 +117,6 @@ class Employee(EmployeeBase, table=True):
         sa_column=Column("EmployeeId", Integer, primary_key=True),
         description="The unique identifier for the employee",
     )
-    # first_name: str = Field(sa_column=Column("FirstName", String(20)))
-    # last_name: str = Field(sa_column=Column("LastName", String(20)))
-    # title: Optional[str] = Field(sa_column=Column("Title", String(30)))
-    # birth_date: Optional[datetime] = Field(sa_column=Column("BirthDate", DateTime))
-    # hire_date: Optional[datetime] = Field(sa_column=Column("HireDate", DateTime))
-    # address: Optional[str] = Field(sa_column=Column("Address", String(70)))
-    # city: Optional[str] = Field(sa_column=Column("City", String(40)))
-    # state: Optional[str] = Field(sa_column=Column("State", String(40)))
-    # country: Optional[str] = Field(sa_column=Column("Country", String(40)))
-    # postal_code: Optional[str] = Field(sa_column=Column("PostalCode", String(10)))
-    # phone: Optional[str] = Field(sa_column=Column("Phone", String(24)))
-    # fax: Optional[str] = Field(sa_column=Column("Fax", String(24)))
-    # email: Optional[str] = Field(sa_column=Column("Email", String(60)))
     reports_to: Optional[int] = Field(
         default=None,
         sa_column=Column("ReportsTo", Integer, ForeignKey("employees.EmployeeId")),
@@ -134,9 +147,33 @@ class EmployeeRead(EmployeeBase):
 
 # Update operation (Put)
 class EmployeeUpdate(EmployeeBase):
-    pass
+    first_name: str = FirstNameField()
+    last_name: str = LastNameField()
+    title: Optional[str] = TitleField()
+    birth_date: Optional[datetime]
+    hire_date: Optional[datetime]
+    address: Optional[str] = AddressField()
+    city: Optional[str] = CityField()
+    state: Optional[str] = StateField()
+    country: Optional[str] = CountryField()
+    postal_code: Optional[str] = PostalCodeField()
+    phone: Optional[str] = PhoneField()
+    fax: Optional[str] = FaxField()
+    email: Optional[str] = EmailField()
 
 
 # Patch operation
 class EmployeePatch(EmployeeBase):
-    pass
+    first_name: Optional[str] = FirstNameField()
+    last_name: Optional[str] = LastNameField()
+    title: Optional[str] = TitleField()
+    birth_date: Optional[datetime]
+    hire_date: Optional[datetime]
+    address: Optional[str] = AddressField()
+    city: Optional[str] = CityField()
+    state: Optional[str] = StateField()
+    country: Optional[str] = CountryField()
+    postal_code: Optional[str] = PostalCodeField()
+    phone: Optional[str] = PhoneField()
+    fax: Optional[str] = FaxField()
+    email: Optional[str] = EmailField()

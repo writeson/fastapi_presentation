@@ -1,15 +1,22 @@
 from typing import Optional, List
+from functools import partial
+
 from sqlalchemy import Column, Integer
 from sqlmodel import SQLModel, Field, Relationship
 from pydantic import ConfigDict
 
-from .fields import String120Field
+from .fields import ValidationConstant, create_string_field
+
+NameField = partial(
+    create_string_field,
+    "Artist Name",
+    "The name of the artist",
+    ValidationConstant.STRING_120,
+)
 
 
 class ArtistBase(SQLModel):
-    name: str = String120Field(
-        title="Artist Name", description="The name of the artist", mapped_name="Name"
-    )
+    name: str = NameField(mapped_name="Name")
 
 
 class Artist(ArtistBase, table=True):
@@ -20,8 +27,6 @@ class Artist(ArtistBase, table=True):
         sa_column=Column("ArtistId", Integer, primary_key=True),
         description="The unique identifier for the artist",
     )
-    # name: str = Field(sa_column=Column("Name"))
-
     albums: List["Album"] = Relationship(back_populates="artist")
 
     model_config = ConfigDict(from_attributes=True)
@@ -51,12 +56,12 @@ class ArtistReadWithAlbums(ArtistBase):
 
 # Update operation (Put)
 class ArtistUpdate(ArtistBase):
-    name: str | None = Field(default=None)
+    name: str | None = NameField()
 
 
 # Patch operation
 class ArtistPatch(ArtistBase):
-    name: Optional[str] = Field(default=None)
+    name: Optional[str] = NameField()
 
 
 from .albums import Album  # noqa: E402

@@ -1,19 +1,29 @@
 from typing import Optional, List
+from functools import partial
+
 from sqlalchemy import Column, Integer, Numeric, Index, ForeignKey
 from sqlmodel import SQLModel, Field, Relationship
 from pydantic import ConfigDict, condecimal, conint
 
 from .playlist_track import PlaylistTrack
-from .fields import (
-    String200Field,
-    String220Field,
+from .fields import ValidationConstant, create_string_field
+
+NameField = partial(
+    create_string_field,
+    "Track Name",
+    "The name of the track",
+    ValidationConstant.STRING_200,
+)
+ComposerField = partial(
+    create_string_field,
+    "Composer",
+    "The composer of the track",
+    ValidationConstant.STRING_220,
 )
 
 
 class TrackBase(SQLModel):
-    name: str = String200Field(
-        title="Track Name",
-        description="The name of the track",
+    name: str = NameField(
         mapped_name="Name",
     )
     milliseconds: conint(ge=0) = Field(
@@ -43,9 +53,7 @@ class TrackBase(SQLModel):
         title="Genre ID",
         description="Foreign key to the genre",
     )
-    composer: Optional[str] = String220Field(
-        title="Composer",
-        description="The composer of the track",
+    composer: Optional[str] = ComposerField(
         mapped_name="Composer",
     )
     bytes: Optional[int] = Field(
@@ -54,37 +62,6 @@ class TrackBase(SQLModel):
         title="Track Size",
         description="The size of the track in bytes",
     )
-
-
-# class TrackReadBase(SQLModel):
-#     name: str = Field(
-#         default=None,
-#         sa_column=Column("Name", String(200)),
-#         description="The name of the track",
-#     )
-#     milliseconds: int = Field(
-#         sa_column=Column("Milliseconds", Integer),
-#         description="The length of the track in milliseconds",
-#     )
-#     unit_price: Decimal = Field(
-#         sa_column=Column("UnitPrice", Numeric(10, 2)),
-#         description="The price of the track",
-#     )
-#     album_id: Optional[int] = Field(
-#         default=None,
-#         sa_column=Column("AlbumId", Integer, ForeignKey("albums.AlbumId")),
-#         description="Foreign key to the album",
-#     )
-#     composer: Optional[str] = Field(
-#         default=None,
-#         sa_column=Column("Composer", String(220)),
-#         description="The composer of the track",
-#     )
-#     bytes: Optional[int] = Field(
-#         default=None,
-#         sa_column=Column("Bytes", Integer),
-#         description="The size of the track in bytes",
-#     )
 
 
 class Track(TrackBase, table=True):
@@ -125,27 +102,16 @@ class TrackRead(TrackBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-# Read with playlists operation
-# class TrackReadWithPlaylists(TrackReadBase):
-#     id: int
-#     genre: "GenreRead"
-#     media_type: "MediaTypeRead"
-#     playlists: List["PlaylistRead"] = Field(default_factory=list)
-#
-#     model_config = ConfigDict(
-#         from_attributes=True,
-#         populate_by_name=True,
-#     )
-
-
 # Update operation (Put)
 class TrackUpdate(TrackBase):
-    name: str | None = Field(default=None)
+    name: str | None = NameField()
+    composer: str | None = ComposerField()
 
 
 # Patch operation
 class TrackPatch(TrackBase):
-    name: Optional[str] = Field(default=None)
+    name: Optional[str] = NameField()
+    composer: Optional[str | None] = ComposerField()
 
 
 from .playlists import Playlist  # noqa: E402

@@ -1,16 +1,22 @@
 from typing import Optional, List
+from functools import partial
 
 from sqlalchemy import Column, Integer, Index, ForeignKey
 from sqlmodel import SQLModel, Field, Relationship
 from pydantic import ConfigDict
 
-from .fields import String160Field
+from .fields import ValidationConstant, create_string_field
+
+TitleField = partial(
+    create_string_field,
+    "Album Title",
+    "The title of the album",
+    ValidationConstant.STRING_160,
+)
 
 
 class AlbumBase(SQLModel):
-    title: str = String160Field(
-        title="Album Title",
-        description="The title of the album",
+    title: str = TitleField(
         mapped_name="Title",
     )
     # artist_id: int = Field(foreign_key="artists.ArtistId")
@@ -61,12 +67,12 @@ class AlbumReadWithTracks(AlbumBase):
 
 # Update operation (Put)
 class AlbumUpdate(AlbumBase):
-    title: str | None = Field(default=None)
+    title: str | None = TitleField(default=None)
 
 
 # Patch operation
 class AlbumPatch(AlbumBase):
-    title: Optional[str] = Field(default=None)
+    title: Optional[str] = TitleField(default=None)
 
 
 from .artists import Artist  # noqa: E402

@@ -1,15 +1,22 @@
 from typing import Optional, List
+from functools import partial
+
 from sqlalchemy import Column, Integer
 from sqlmodel import SQLModel, Field, Relationship
 from pydantic import ConfigDict
 
-from .fields import String120Field
+from .fields import ValidationConstant, create_string_field
+
+NameField = partial(
+    create_string_field,
+    "Media Type Name",
+    "The name of the media type",
+    ValidationConstant.STRING_120,
+)
 
 
 class MediaTypeBase(SQLModel):
-    name: str = String120Field(
-        title="Media Type Name",
-        description="The name of the media type",
+    name: str = NameField(
         mapped_name="Name",
     )
 
@@ -52,12 +59,12 @@ class MediaTypeReadWithTracks(MediaTypeBase):
 
 # Update operation (Put)
 class MediaTypeUpdate(MediaTypeBase):
-    name: str | None = Field(default=None)
+    name: str | None = NameField()
 
 
 # Patch operation
 class MediaTypePatch(MediaTypeBase):
-    name: Optional[str] = Field(default=None)
+    name: Optional[str] = NameField()
 
 
 from .tracks import Track  # noqa: E402

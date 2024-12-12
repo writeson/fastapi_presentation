@@ -1,15 +1,22 @@
 from typing import Optional, List
+from functools import partial
+
 from sqlalchemy import Column, Integer
 from sqlmodel import SQLModel, Field, Relationship
 from pydantic import ConfigDict
 
-from .fields import String120Field
+from .fields import ValidationConstant, create_string_field
+
+NameField = partial(
+    create_string_field,
+    "Genre Name",
+    "The name of the genre",
+    ValidationConstant.STRING_120,
+)
 
 
 class GenreBase(SQLModel):
-    name: str = String120Field(
-        title="Genre Name",
-        description="The name of the genre",
+    name: str = NameField(
         mapped_name="Name",
     )
 
@@ -51,12 +58,12 @@ class GenreReadWithTracks(GenreBase):
 
 # Update operation (Put)
 class GenreUpdate(GenreBase):
-    name: str | None = Field(default=None)
+    name: str = NameField()
 
 
 # Patch operation
 class GenrePatch(GenreBase):
-    name: Optional[str] = Field(default=None)
+    name: Optional[str] = NameField()
 
 
 from .tracks import Track  # noqa: E402

@@ -3,7 +3,6 @@ from types import ModuleType
 
 from fastapi import APIRouter, Depends, Path, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from project.app.database import get_db
 from project.app.endpoints import crud
