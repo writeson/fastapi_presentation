@@ -37,20 +37,23 @@ The ERD (Entity Relationship Diagram) of the database looks like this:
 
 REST is more of a convention than a standardized protocol, and I use my convention to create the REST URL endpoints.
 
-* The endpoints define a collection of "things" and access to a single "thing." Because they are things, nouns are used as names. I am careful when naming things to avoid awkward plural and singular nouns.
-  * i.e., Read collection: HTTP GET /api/v1/artists - returns a collection of artists
-  * i.e., Read single item: HTTP GET /api/v1/artists/1 - returns a single artist with an id of 1
-* The CRUD behaviors are mapped to these HTTP method verbs:
-  * Create - HTTP Post
-  * Read - HTTP Get
-  * Update
-    * Update complete resource - HTTP Put
-    * Update partial resource - HTTP Patch
-  * Delete - HTTP Delete
+The endpoints define a collection of "things" and access to a single "thing." Because they are things, nouns are used as names. I am careful when naming things to avoid awkward plural and singular nouns.
+* i.e., Read collection: HTTP GET /api/v1/artists - returns a collection of artists
+* i.e., Read single item: HTTP GET /api/v1/artists/1 - returns a single artist with an id of 1
+
+The CRUD behaviors are mapped to these HTTP method verbs:
+
+| CRUD Method | HTTP Method | URL Endpoint         | Action on a thing         |
+| :---------- | ----------- | -------------------- | ------------------------- |
+| Create      | POST        | /api/v1/artists      | Create new thing          |
+| Read        | GET         | /api/v1/artists      | Read collection of things |
+| Read        | GET         | /api/v1/artists/{id} | Read singular thing       |
+| Update      | PUT         | /api/v1/artists/{id} | Update entire thing       |
+| Update      | PATCH       | /api/v1/artists/{id} | Partially update thing    |
 
 > [!NOTE]
 >
-> In this application, there is no Delete functionality. It's generally a bad idea to delete data from a database. I prefer to have something like an `active` flag that can be True or False to include or exclude the item from the interface. To do this would have meant modifying the Chinook database to add an `active` flag, and I chose not to do that.
+> In this application, there is no Delete functionality. It's generally a bad idea to delete data from a database. I prefer to have something like an `active` flag that can be True or False to include or exclude the item from the interface. To do this would have meant modifying the Chinook database to add an `active` flag. Doing that would have made it more difficult to reset the database back to its default state, so I chose not to add delete functionality to the API.
 
 
 
