@@ -71,7 +71,7 @@ def app_factory():
     fastapi_app: FastAPI = FastAPI(
         title="FastAPI Presentation API",
         description=__doc__,
-        version="0.1.0",
+        version="1.0.0",
         openapi_url="/openapi.json",
         lifespan=lifespan,
         debug=True,

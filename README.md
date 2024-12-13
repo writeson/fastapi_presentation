@@ -52,6 +52,8 @@ REST is more of a convention than a standardized protocol, and I use my conventi
 >
 > In this application, there is no Delete functionality. It's generally a bad idea to delete data from a database. I prefer to have something like an `active` flag that can be True or False to include or exclude the item from the interface. To do this would have meant modifying the Chinook database to add an `active` flag, and I chose not to do that.
 
+
+
 ## SQLModels
 
 ## URL Endpoint Routes

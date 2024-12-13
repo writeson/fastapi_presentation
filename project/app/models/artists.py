@@ -44,16 +44,6 @@ class ArtistRead(ArtistBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-class ArtistReadWithAlbums(ArtistBase):
-    id: int
-    albums: List["Album"] = []
-
-    model_config = ConfigDict(
-        from_attributes=True,
-        populate_by_name=True,
-    )
-
-
 # Update operation (Put)
 class ArtistUpdate(ArtistBase):
     name: str | None = NameField()
