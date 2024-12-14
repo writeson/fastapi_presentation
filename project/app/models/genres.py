@@ -16,9 +16,7 @@ NameField = partial(
 
 
 class GenreBase(SQLModel):
-    name: str = NameField(
-        mapped_name="Name",
-    )
+    name: str = NameField(mapped_name="Name")
 
 
 class Genre(GenreBase, table=True):
@@ -46,19 +44,9 @@ class GenreRead(GenreBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-class GenreReadWithTracks(GenreBase):
-    id: int
-    tracks: List["Track"] = []
-
-    model_config = ConfigDict(
-        from_attributes=True,
-        populate_by_name=True,
-    )
-
-
 # Update operation (Put)
 class GenreUpdate(GenreBase):
-    name: str = NameField()
+    pass
 
 
 # Patch operation

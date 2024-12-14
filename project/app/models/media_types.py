@@ -16,9 +16,7 @@ NameField = partial(
 
 
 class MediaTypeBase(SQLModel):
-    name: str = NameField(
-        mapped_name="Name",
-    )
+    name: str = NameField(mapped_name="Name")
 
 
 class MediaType(MediaTypeBase, table=True):
@@ -47,19 +45,9 @@ class MediaTypeRead(MediaTypeBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-class MediaTypeReadWithTracks(MediaTypeBase):
-    id: int
-    tracks: List["Track"] = []
-
-    model_config = ConfigDict(
-        from_attributes=True,
-        populate_by_name=True,
-    )
-
-
 # Update operation (Put)
 class MediaTypeUpdate(MediaTypeBase):
-    name: str | None = NameField()
+    pass
 
 
 # Patch operation

@@ -7,6 +7,7 @@ from pydantic import ConfigDict
 
 from .fields import ValidationConstant, create_string_field
 
+
 FirstNameField = partial(
     create_string_field,
     "First Name",
@@ -64,38 +65,23 @@ FaxField = partial(
 
 
 class CustomerBase(SQLModel):
-    first_name: str = FirstNameField(
-        mapped_name="FirstName",
-    )
-    last_name: str = LastNameField(
-        mapped_name="LastName",
-    )
-    email: str = EmailField(
-        mapped_name="Email",
-    )
-    company: Optional[str] = CompanyField(
-        mapped_name="Company",
-    )
-    address: Optional[str] = AddressField(
-        mapped_name="Address",
-    )
-    city: Optional[str] = CityField(
-        mapped_name="City",
-    )
-    state: Optional[str] = StateField(
-        mapped_name="State",
-    )
-    country: Optional[str] = CountryField(
-        mapped_name="Country",
-    )
-    postal_code: Optional[str] = PostalCodeField(
-        mapped_name="PostalCode",
-    )
-    phone: Optional[str] = PhoneField(
-        mapped_name="Phone",
-    )
-    fax: Optional[str] = FaxField(
-        mapped_name="Fax",
+    first_name: str = FirstNameField(mapped_name="FirstName")
+    last_name: str = LastNameField(mapped_name="LastName")
+    email: str = EmailField(mapped_name="Email")
+    company: Optional[str] = CompanyField(mapped_name="Company")
+    address: Optional[str] = AddressField(mapped_name="Address")
+    city: Optional[str] = CityField(mapped_name="City")
+    state: Optional[str] = StateField(mapped_name="State")
+    country: Optional[str] = CountryField(mapped_name="Country")
+    postal_code: Optional[str] = PostalCodeField(mapped_name="PostalCode")
+    phone: Optional[str] = PhoneField(mapped_name="Phone")
+    fax: Optional[str] = FaxField(mapped_name="Fax")
+    support_rep_id: Optional[int] = Field(
+        default=None,
+        sa_column=Column(
+            "SupportRepId", Integer, ForeignKey("employees.EmployeeId"), index=True
+        ),
+        description="The ID of the customer's support representative",
     )
 
 
@@ -106,11 +92,6 @@ class Customer(CustomerBase, table=True):
         default=None,
         sa_column=Column("CustomerId", Integer, primary_key=True),
         description="The unique identifier for the customer",
-    )
-    support_rep_id: Optional[int] = Field(
-        default=None,
-        sa_column=Column("SupportRepId", Integer, ForeignKey("employees.EmployeeId")),
-        description="The ID of the customer's support representative",
     )
 
     model_config = ConfigDict(from_attributes=True)
@@ -131,17 +112,7 @@ class CustomerRead(CustomerBase):
 
 # Update operation (Put)
 class CustomerUpdate(CustomerBase):
-    first_name: str = FirstNameField()
-    last_name: str = LastNameField()
-    email: str = EmailField()
-    company: Optional[str] = CompanyField()
-    address: Optional[str] = AddressField()
-    city: Optional[str] = CityField()
-    state: Optional[str] = StateField()
-    country: Optional[str] = CountryField()
-    postal_code: Optional[str] = PostalCodeField()
-    phone: Optional[str] = PhoneField()
-    fax: Optional[str] = FaxField()
+    pass
 
 
 # Patch operation
@@ -157,3 +128,4 @@ class CustomerPatch(CustomerBase):
     postal_code: Optional[str] = PostalCodeField()
     phone: Optional[str] = PhoneField()
     fax: Optional[str] = FaxField()
+    support_rep_id: Optional[int]

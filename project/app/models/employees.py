@@ -64,15 +64,9 @@ EmailField = partial(
 
 
 class EmployeeBase(SQLModel):
-    first_name: str = FirstNameField(
-        mapped_name="FirstName",
-    )
-    last_name: str = LastNameField(
-        mapped_name="LastName",
-    )
-    title: Optional[str] = TitleField(
-        mapped_name="Title",
-    )
+    first_name: str = FirstNameField(mapped_name="FirstName")
+    last_name: str = LastNameField(mapped_name="LastName")
+    title: Optional[str] = TitleField(mapped_name="Title")
     birth_date: Optional[datetime] = Field(
         title="Birth Date",
         description="The employee's birth date",
@@ -83,29 +77,20 @@ class EmployeeBase(SQLModel):
         description="The employee's hire date",
         sa_column=Column("HireDate", DateTime),
     )
-    address: Optional[str] = AddressField(
-        mapped_name="Address",
-    )
-    city: Optional[str] = CityField(
-        mapped_name="City",
-    )
-    state: Optional[str] = StateField(
-        mapped_name="State",
-    )
-    country: Optional[str] = CountryField(
-        mapped_name="Country",
-    )
-    postal_code: Optional[str] = PostalCodeField(
-        mapped_name="PostalCode",
-    )
-    phone: Optional[str] = PhoneField(
-        mapped_name="Phone",
-    )
-    fax: Optional[str] = FaxField(
-        mapped_name="Fax",
-    )
-    email: Optional[str] = EmailField(
-        mapped_name="Email",
+    address: Optional[str] = AddressField(mapped_name="Address")
+    city: Optional[str] = CityField(mapped_name="City")
+    state: Optional[str] = StateField(mapped_name="State")
+    country: Optional[str] = CountryField(mapped_name="Country")
+    postal_code: Optional[str] = PostalCodeField(mapped_name="PostalCode")
+    phone: Optional[str] = PhoneField(mapped_name="Phone")
+    fax: Optional[str] = FaxField(mapped_name="Fax")
+    email: Optional[str] = EmailField(mapped_name="Email")
+    reports_to: Optional[int] = Field(
+        default=None,
+        sa_column=Column(
+            "ReportsTo", Integer, ForeignKey("employees.EmployeeId"), index=True
+        ),
+        description="The ID of the employee's manager",
     )
 
 
@@ -117,12 +102,6 @@ class Employee(EmployeeBase, table=True):
         sa_column=Column("EmployeeId", Integer, primary_key=True),
         description="The unique identifier for the employee",
     )
-    reports_to: Optional[int] = Field(
-        default=None,
-        sa_column=Column("ReportsTo", Integer, ForeignKey("employees.EmployeeId")),
-        description="The ID of the employee's manager",
-    )
-
     manager: Optional["Employee"] = Relationship(
         back_populates="subordinates",
         sa_relationship_kwargs={"remote_side": "Employee.id"},
@@ -147,19 +126,7 @@ class EmployeeRead(EmployeeBase):
 
 # Update operation (Put)
 class EmployeeUpdate(EmployeeBase):
-    first_name: str = FirstNameField()
-    last_name: str = LastNameField()
-    title: Optional[str] = TitleField()
-    birth_date: Optional[datetime]
-    hire_date: Optional[datetime]
-    address: Optional[str] = AddressField()
-    city: Optional[str] = CityField()
-    state: Optional[str] = StateField()
-    country: Optional[str] = CountryField()
-    postal_code: Optional[str] = PostalCodeField()
-    phone: Optional[str] = PhoneField()
-    fax: Optional[str] = FaxField()
-    email: Optional[str] = EmailField()
+    pass
 
 
 # Patch operation
@@ -177,3 +144,4 @@ class EmployeePatch(EmployeeBase):
     phone: Optional[str] = PhoneField()
     fax: Optional[str] = FaxField()
     email: Optional[str] = EmailField()
+    reports_to: Optional[int]

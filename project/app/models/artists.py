@@ -46,7 +46,7 @@ class ArtistRead(ArtistBase):
 
 # Update operation (Put)
 class ArtistUpdate(ArtistBase):
-    name: str | None = NameField()
+    pass
 
 
 # Patch operation

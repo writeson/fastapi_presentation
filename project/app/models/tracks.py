@@ -23,9 +23,7 @@ ComposerField = partial(
 
 
 class TrackBase(SQLModel):
-    name: str = NameField(
-        mapped_name="Name",
-    )
+    name: str = NameField(mapped_name="Name")
     milliseconds: conint(ge=0) = Field(
         sa_column=Column("Milliseconds", Integer),
         title="Track Length",
@@ -36,31 +34,31 @@ class TrackBase(SQLModel):
         title="Track Price",
         description="The price of the track",
     )
-    album_id: Optional[int] = Field(
-        default=None,
-        sa_column=Column("AlbumId", Integer, ForeignKey("albums.AlbumId")),
-        title="Album ID",
-        description="Foreign key to the album",
-    )
-    media_type_id: conint(ge=0) = Field(
-        sa_column=Column("MediaTypeId", Integer, ForeignKey("media_types.MediaTypeId")),
-        title="Media Type ID",
-        description="Foreign key to the media type",
-    )
-    genre_id: Optional[int] = Field(
-        default=None,
-        sa_column=Column("GenreId", Integer, ForeignKey("genres.GenreId")),
-        title="Genre ID",
-        description="Foreign key to the genre",
-    )
-    composer: Optional[str] = ComposerField(
-        mapped_name="Composer",
-    )
-    bytes: Optional[int] = Field(
+    composer: str | None = ComposerField(mapped_name="Composer")
+    bytes: int = Field(
         default=None,
         sa_column=Column("Bytes", Integer),
         title="Track Size",
         description="The size of the track in bytes",
+    )
+    media_type_id: conint(ge=0) = Field(
+        sa_column=Column(
+            "MediaTypeId", Integer, ForeignKey("media_types.MediaTypeId"), index=True
+        ),
+        title="Media Type ID",
+        description="Foreign key to the media type",
+    )
+    album_id: Optional[int] = Field(
+        default=None,
+        sa_column=Column("AlbumId", Integer, ForeignKey("albums.AlbumId"), index=True),
+        title="Album ID",
+        description="Foreign key to the album",
+    )
+    genre_id: Optional[int] = Field(
+        default=None,
+        sa_column=Column("GenreId", Integer, ForeignKey("genres.GenreId"), index=True),
+        title="Genre ID",
+        description="Foreign key to the genre",
     )
 
 
@@ -72,7 +70,6 @@ class Track(TrackBase, table=True):
         sa_column=Column("TrackId", Integer, primary_key=True),
         description="The unique identifier for the track",
     )
-
     playlists: List["Playlist"] = Relationship(
         back_populates="tracks", link_model=PlaylistTrack
     )
@@ -96,22 +93,25 @@ class TrackCreate(TrackBase):
 # Read operation
 class TrackRead(TrackBase):
     id: int
-    # genre: "GenreRead"
-    # media_type: "MediaTypeRead"
 
     model_config = ConfigDict(from_attributes=True)
 
 
 # Update operation (Put)
 class TrackUpdate(TrackBase):
-    name: str | None = NameField()
-    composer: str | None = ComposerField()
+    pass
 
 
 # Patch operation
 class TrackPatch(TrackBase):
     name: Optional[str] = NameField()
     composer: Optional[str | None] = ComposerField()
+    milliseconds: Optional[conint(ge=0)]
+    unit_price: Optional[condecimal(ge=0.0, le=10.0, max_digits=4, decimal_places=2)]
+    album_id: Optional[int]
+    media_type_id: Optional[conint(ge=0)]
+    genre_id: Optional[int]
+    bytes: Optional[int]
 
 
 from .playlists import Playlist  # noqa: E402

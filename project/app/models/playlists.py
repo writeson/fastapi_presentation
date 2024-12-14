@@ -17,9 +17,7 @@ NameField = partial(
 
 
 class PlaylistBase(SQLModel):
-    name: Optional[str] = NameField(
-        mapped_name="Name",
-    )
+    name: Optional[str] = NameField(mapped_name="Name")
 
 
 class Playlist(PlaylistBase, table=True):
@@ -46,7 +44,7 @@ class PlaylistRead(PlaylistBase):
 
 
 class PlaylistUpdate(PlaylistBase):
-    name: str = NameField()
+    pass
 
 
 class PlaylistPatch(PlaylistBase):

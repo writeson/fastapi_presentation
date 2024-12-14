@@ -18,6 +18,26 @@ class InvoiceItemBase(SQLModel):
         description="The quantity of items",
         sa_column=Column("Quantity", Integer, nullable=False),
     )
+    invoice_id: int = Field(
+        ge=0,
+        sa_column=Column(
+            "InvoiceId",
+            Integer,
+            ForeignKey("invoices.InvoiceId"),
+            nullable=False,
+            index=True,
+        ),
+        title="Key to Invoice",
+        description="Foreign key to the invoice",
+    )
+    track_id: int = Field(
+        ge=0,
+        sa_column=Column(
+            "TrackId", Integer, ForeignKey("tracks.TrackId"), nullable=False, index=True
+        ),
+        title="Key to Track",
+        description="Foreign key to the track",
+    )
 
 
 class InvoiceItem(InvoiceItemBase, table=True):
@@ -28,23 +48,6 @@ class InvoiceItem(InvoiceItemBase, table=True):
         sa_column=Column("InvoiceLineId", Integer, primary_key=True),
         description="The unique identifier for the invoice line item",
     )
-    invoice_id: int = Field(
-        ge=0,
-        sa_column=Column(
-            "InvoiceId", Integer, ForeignKey("invoices.InvoiceId"), nullable=False
-        ),
-        title="Key to Invoice",
-        description="Foreign key to the invoice",
-    )
-    track_id: int = Field(
-        ge=0,
-        sa_column=Column(
-            "TrackId", Integer, ForeignKey("tracks.TrackId"), nullable=False
-        ),
-        title="Key to Track",
-        description="Foreign key to the track",
-    )
-
     invoice: Optional["Invoice"] = Relationship(back_populates="invoice_items")
     track: Optional["Track"] = Relationship(back_populates="invoice_items")
 
@@ -53,29 +56,27 @@ class InvoiceItem(InvoiceItemBase, table=True):
 
 # Create operation
 class InvoiceItemCreate(InvoiceItemBase):
-    invoice_id: int
-    track_id: int
+    pass
 
 
 # Read operation
 class InvoiceItemRead(InvoiceItemBase):
     id: int
-    invoice_id: int
-    track_id: int
 
     model_config = ConfigDict(from_attributes=True)
 
 
 # Update operation (Put)
 class InvoiceItemUpdate(InvoiceItemBase):
-    unit_price: Optional[Decimal] = None
-    quantity: Optional[int] = None
+    pass
 
 
 # Patch operation
 class InvoiceItemPatch(InvoiceItemBase):
     unit_price: Optional[Decimal] = None
     quantity: Optional[int] = None
+    invoice_id: Optional[int] = None
+    track_id: Optional[int] = None
 
 
 from .invoices import Invoice  # noqa: E402

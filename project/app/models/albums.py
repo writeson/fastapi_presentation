@@ -16,10 +16,10 @@ TitleField = partial(
 
 
 class AlbumBase(SQLModel):
-    title: str = TitleField(
-        mapped_name="Title",
+    title: str = TitleField(mapped_name="Title")
+    artist_id: int = Field(
+        sa_column=Column("ArtistId", Integer, ForeignKey("artists.ArtistId")),
     )
-    # artist_id: int = Field(foreign_key="artists.ArtistId")
 
 
 class Album(AlbumBase, table=True):
@@ -27,14 +27,9 @@ class Album(AlbumBase, table=True):
 
     id: Optional[int] = Field(
         default=None,
-        sa_column=Column("AlbumId", Integer, primary_key=True),
+        sa_column=Column("AlbumId", Integer, primary_key=True, index=True),
         description="The unique identifier for the album",
     )
-    # title: str = Field(sa_column=Column("Title"))
-    artist_id: int = Field(
-        sa_column=Column("ArtistId", Integer, ForeignKey("artists.ArtistId")),
-    )
-
     # Define the relationship to Artist
     artist: "Artist" = Relationship(back_populates="albums")
 
@@ -58,16 +53,9 @@ class AlbumRead(AlbumBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-class AlbumReadWithTracks(AlbumBase):
-    id: int
-    tracks: List["Track"] = []
-
-    model_config = ConfigDict(from_attributes=True)
-
-
 # Update operation (Put)
 class AlbumUpdate(AlbumBase):
-    title: str | None = TitleField(default=None)
+    pass
 
 
 # Patch operation
