@@ -78,7 +78,7 @@ def create_item_route(
                 session=session,
                 data=data,
                 input_class=getattr(model, f"{class_name}"),
-                output_class=getattr(model, f"{class_name}Read"),
+                output_class=getattr(model, f"{class_name}"),
             )
             if db_item is None:
                 raise HTTPException(
@@ -116,7 +116,7 @@ def get_items_route(
                 offset=offset,
                 limit=limit,
                 input_class=getattr(model, f"{class_name}"),
-                output_class=getattr(model, f"{class_name}Read"),
+                output_class=getattr(model, f"{class_name}"),
             )
             return CombinedResponseReadAll(
                 response=items,
@@ -147,7 +147,7 @@ def get_item_route(
                 session=session,
                 id=id,
                 input_class=getattr(model, f"{class_name}"),
-                output_class=getattr(model, f"{class_name}Read"),
+                output_class=getattr(model, f"{class_name}"),
             )
             if db_item is None:
                 raise HTTPException(
@@ -180,7 +180,7 @@ def update_item_route(
                 id=id,
                 data=data,
                 input_class=getattr(model, f"{class_name}"),
-                output_class=getattr(model, f"{class_name}Read"),
+                output_class=getattr(model, f"{class_name}"),
             )
             if db_item is None:
                 raise HTTPException(
@@ -216,8 +216,8 @@ def patch_item_route(
                 session=session,
                 id=id,
                 data=data,
-                input_class=getattr(model, f"{class_name}Read"),
-                output_class=getattr(model, f"{class_name}Read"),
+                input_class=getattr(model, f"{class_name}"),
+                output_class=getattr(model, f"{class_name}"),
             )
             if db_item is None:
                 raise HTTPException(

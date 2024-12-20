@@ -39,7 +39,7 @@ async def create_item(
     session.add(db_item)
     await session.commit()
     await session.refresh(db_item)
-    return output_class.model_validate(db_item)
+    return db_item
 
 
 async def read_items(
@@ -67,7 +67,7 @@ async def read_items(
     count_query = select(func.count()).select_from(input_class)
     total_count = await session.scalar(count_query)
 
-    return [output_class.model_validate(db_item) for db_item in db_items], total_count
+    return [(db_item) for db_item in db_items], total_count
 
 
 async def read_item(
@@ -91,7 +91,7 @@ async def read_item(
     db_item = result.scalar_one_or_none()
     if db_item is None:
         raise HTTPException(status_code=404, detail=f"{input_class} not found")
-    return output_class.model_validate(db_item)
+    return db_item
 
 
 async def update_item(
@@ -123,7 +123,7 @@ async def update_item(
     session.add(db_item)
     await session.commit()
     await session.refresh(db_item)
-    return output_class.model_validate(db_item)
+    return db_item
 
 
 async def patch_item(
@@ -156,30 +156,4 @@ async def patch_item(
     session.add(db_item)
     await session.commit()
     await session.refresh(db_item)
-    return output_class.model_validate(db_item)
-
-
-def get_joinedload_options(parent_class, relationship_name):
-    """
-    Generate joinedload options dynamically for a given relationship name.
-    """
-    relationship = getattr(parent_class, relationship_name, None)
-    if not relationship:
-        raise ValueError(
-            f"'{relationship_name}' is not a valid relationship of '{parent_class.__name__}'"
-        )
-
-    # Base joinedload for the main relationship
-    options = [joinedload(relationship)]
-
-    # Add nested relationships dynamically
-    for rel in parent_class.__mapper__.relationships:
-        if rel.key == relationship_name:
-            for sub_rel in rel.mapper.relationships:
-                options.append(
-                    joinedload(
-                        getattr(relationship.property.mapper.class_, sub_rel.key)
-                    )
-                )
-
-    return options
+    return db_item

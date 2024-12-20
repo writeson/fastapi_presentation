@@ -1,7 +1,7 @@
 # FastAPI Presentation
 # Introduction
 
-This repository contains an example of a FastAPI application used with a presentation about FastAPI. My goal is this repository is useful as an tool to help developers get up to speed to use the framework to create APIs.
+This repository contains an example application used with a presentation about FastAPI. My goal for this repository making it a useful tool to help developers get up to speed to use the FastAPI framework to create APIs.
 
 # FastAPI
 
@@ -11,11 +11,11 @@ FastAPI is a modern, high-performance web framework for building APIs with Pytho
 
 ## Why Use FastAPI
 
-The framework has many features that make it attractive:
+The framework has many attractive features:
 
 1. It has very high performance, comparable to NodeJS and Go
-2. Developers will realize coding performance improvements as it's fast to code
-3. FastAPI has great editor and IDE support
+2. Developers gain coding performance improvements
+3. Editors and IDEs have great support for FastAPI
 4. It's a robust platform for creating production-ready code
 5. Based on open standards for APIs, OpenAPI, previously known as Swagger
 
@@ -25,34 +25,34 @@ Companies like Microsoft, Uber, Netflix, Expedia Group, and Cisco use FastAPI.
 
 # Example Application
 
-The code that makes up the bulk of this repository is a FastAPI web application that creates CRUD REST APIs to access a database. Rather than create a database from scratch, the code uses the [Chinook database](https://www.sqlitetutorial.net/sqlite-sample-database/) from the [SQLite Tutorial](https://www.sqlitetutorial.net/) website. This is a great resource to learn SQL and has a download link to the database used in the example application.
+The code that makes up the bulk of this repository is a FastAPI web application that creates CRUD REST APIs to access a database. Rather than create a database from scratch, I used the [Chinook database](https://www.sqlitetutorial.net/sqlite-sample-database/) from the [SQLite Tutorial](https://www.sqlitetutorial.net/) website. This is a great resource to learn SQL and has a download link to the database.
 
 I used the Chinook SQLite database for a couple of reasons:
 
-1. I didn't have to build a database and populate it with data, which was a time-saver
-2. Because it's an "in process" database engine, it wasn't necessary to set up and configure some other database engine, like MySQL, PostgreSQL, or SQL Server.
+1. I didn't have to build a database and populate it with data, which was a time-saver.
+2. Because it's an "in process" database engine, it wasn't necessary to set up and configure another database engine, like MySQL, PostgreSQL, or SQL Server.
 
 The ERD (Entity Relationship Diagram) of the database looks like this:
 
 ![The ERD diagram of the Chinook database](docs/images/chinook_db_diagram.jpg)
 
- The database has tables with one-to-many, many-to-many, and self-referential hierarchical tables, which display FastAPIs abilities.
+ The database has tables with one-to-many, many-to-many, and self-referential hierarchical tables, which I used to display FastAPIs abilities.
 
 ## REST Conventions
 
-REST is more of a convention than a standardized protocol, and I use my convention to create the REST URL endpoints.
+REST is more of a convention than a standardized protocol, and I used my conventions to create the REST URL endpoints.
 
 The endpoints define a collection of "things" and access to a single "thing." Because they are things, nouns are used as names. I am careful when naming things to avoid awkward plural and singular nouns.
 
 The CRUD behaviors are mapped to these HTTP method verbs:
 
-| CRUD Method | HTTP Method | URL Endpoint         | Action on a thing         |
-| :---------- | ----------- | -------------------- | ------------------------- |
-| Create      | POST        | /api/v1/artists      | Create new thing          |
-| Read        | GET         | /api/v1/artists      | Read collection of things |
-| Read        | GET         | /api/v1/artists/{id} | Read singular thing       |
-| Update      | PUT         | /api/v1/artists/{id} | Update entire thing       |
-| Update      | PATCH       | /api/v1/artists/{id} | Partially update thing    |
+| CRUD Method | HTTP Method | URL Endpoint        | Action on a thing                                            |
+| :---------- | ----------- | ------------------- | ------------------------------------------------------------ |
+| Create      | POST        | /api/v1/things      | Create new thing                                             |
+| Read        | GET         | /api/v1/things      | Read collection of things                                    |
+| Read        | GET         | /api/v1/things/{id} | Read singular thing as a URI (Universal Resource Identifier) |
+| Update      | PUT         | /api/v1/things/{id} | Update entire thing                                          |
+| Update      | PATCH       | /api/v1/things/{id} | Partially update thing                                       |
 
 > [!NOTE]
 >
@@ -60,7 +60,7 @@ The CRUD behaviors are mapped to these HTTP method verbs:
 
 ## SQLModels
 
-The [SQLModel](https://sqlmodel.tiangolo.com/) library interacts with the database and combines [SQLAlchemy](https://www.sqlalchemy.org/) and [Pydantic](https://docs.pydantic.dev/latest/) nicely to reduce code duplication. Here is the `albums` table schema as defined by the database:
+To reduce code duplication, the SQLModel library interacts with the database and combines SQLAlchemy and Pydantic nicely. Here is the `albums` table schema as defined by the database:
 
 ```sql
 create table albums
@@ -77,11 +77,11 @@ create index IFK_AlbumArtistId
     on albums (ArtistId);
 ```
 
-This nicely describes the `albums` table schema and shows it contains a primary key named `AlbumIId`, a `Title` string 160 characters long, and a foreign key called `ArtisId` the references the primary key of another table called `artists`. It also creates an index on the `ArtistId` column to improve performance on join operations.
+This nicely describes the `albums` table schema and shows it contains a primary key named `AlbumIId`, a `Title` string 160 characters long, and a foreign key called `ArtisId` that references the primary key of another table called `artists`. It also creates an index on the `ArtistId` column to improve performance on join operations.
 
-This works fine, but I want to change how my application works with the table without changing the `albums` schema.
+This works fine, but I want to change how my application works with the table without changing the `albums` table schema.
 
-* I don't care for the naming convention used in the Chinook database for column names, and I'll normalize them to conventions I prefer.
+* I don't care for the naming convention used in the Chinook database for column names, and I'll map them to the naming conventions I prefer.
 
 ```python
 from typing import Optional, List
