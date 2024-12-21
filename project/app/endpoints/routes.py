@@ -77,8 +77,7 @@ def create_item_route(
             db_item = await crud.create_item(
                 session=session,
                 data=data,
-                input_class=getattr(model, f"{class_name}"),
-                output_class=getattr(model, f"{class_name}"),
+                model_class=getattr(model, f"{class_name}"),
             )
             if db_item is None:
                 raise HTTPException(
@@ -115,8 +114,7 @@ def get_items_route(
                 session=session,
                 offset=offset,
                 limit=limit,
-                input_class=getattr(model, f"{class_name}"),
-                output_class=getattr(model, f"{class_name}"),
+                model_class=getattr(model, f"{class_name}"),
             )
             return CombinedResponseReadAll(
                 response=items,
@@ -146,8 +144,7 @@ def get_item_route(
             db_item = await crud.read_item(
                 session=session,
                 id=id,
-                input_class=getattr(model, f"{class_name}"),
-                output_class=getattr(model, f"{class_name}"),
+                model_class=getattr(model, f"{class_name}"),
             )
             if db_item is None:
                 raise HTTPException(
@@ -179,8 +176,7 @@ def update_item_route(
                 session=session,
                 id=id,
                 data=data,
-                input_class=getattr(model, f"{class_name}"),
-                output_class=getattr(model, f"{class_name}"),
+                model_class=getattr(model, f"{class_name}"),
             )
             if db_item is None:
                 raise HTTPException(
@@ -216,8 +212,7 @@ def patch_item_route(
                 session=session,
                 id=id,
                 data=data,
-                input_class=getattr(model, f"{class_name}"),
-                output_class=getattr(model, f"{class_name}"),
+                model_class=getattr(model, f"{class_name}"),
             )
             if db_item is None:
                 raise HTTPException(
@@ -230,49 +225,6 @@ def patch_item_route(
                 meta_data=MetaDataPatch(),
                 response=db_item,
             )
-
-
-def create_child_route(
-    parent_class,
-    child_class,
-    child_read_class,
-    child_prefix: str,
-    child_local_prefix: str,
-):
-    async def read_item_children(
-        id: int = Path(..., title=f"The ID of the {child_local_prefix} to get"),
-        offset: int = 0,
-        limit: int = 10,
-        db: AsyncSession = Depends(get_db),
-    ):
-        async with db as session:
-            children, total_count = await crud.read_children_items(
-                session=session,
-                parent_id=id,
-                offset=offset,
-                limit=limit,
-                parent_class=parent_class,
-                input_class=child_class,
-                output_class=child_read_class,
-            )
-            return CombinedResponseReadAll(
-                response=children,
-                total_count=total_count,
-            )
-
-    return read_item_children
-
-
-def get_relationship_name(parent_class, child_class):
-    """
-    Get the relationship name between two classes.
-    """
-    for relationship in parent_class.__mapper__.relationships:
-        if relationship.mapper.class_ == child_class:
-            return relationship.key
-    raise ValueError(
-        f"No relationship found between {parent_class.__name__} and {child_class.__name__}"
-    )
 
 
 def get_model_names(model: ModuleType) -> Tuple[str]:
