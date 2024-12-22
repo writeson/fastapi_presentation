@@ -25,7 +25,7 @@ async def create_item(
 ) -> OutputType:
     """
     Create a new item in the database.
-    Returns the created item as the specified output class.
+    Returns the created item as the same class.
     """
     if not inspect.isclass(model_class):
         raise ValueError("model_class must be class object")
@@ -45,7 +45,7 @@ async def read_items(
 ) -> [List[OutputType], int]:
     """
     Retrieve a paginated list of items from the database.
-    Returns a list of items as the specified output class.
+    Returns a list of items as the same class.
     """
     if not inspect.isclass(model_class):
         raise ValueError("model_class must be class object")
@@ -68,7 +68,7 @@ async def read_item(
 ) -> OutputType:
     """
     Retrieve an item from the database by ID.
-    Returns the item as the specified output class if found, None otherwise.
+    Returns the item as the same class if found, None otherwise.
     """
     if not inspect.isclass(model_class):
         raise ValueError("model_class must be class object")
@@ -89,7 +89,7 @@ async def update_item(
 ) -> OutputType:
     """
     Update an existing item in the database using the passed in input class and output class.
-    Returns the updated item as the specified output class if found, returns None otherwise.
+    Returns the updated item as the same class if found, returns None otherwise.
     """
     if not inspect.isclass(model_class):
         raise ValueError("model_class must be class object")
@@ -117,7 +117,7 @@ async def patch_item(
 ) -> OutputType:
     """
     Partially update an existing item in the database using the passed in input class and output class.
-    Returns the updated item as the specified output class if found, returns None otherwise.
+    Returns the updated item as the same class if found, returns None otherwise.
     """
     if not inspect.isclass(model_class):
         raise ValueError("model_class must be class object")

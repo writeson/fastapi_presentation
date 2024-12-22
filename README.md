@@ -299,7 +299,74 @@ It also calls the `children.get_routes` function to create the children routes. 
 
 I haven't figured out a way to make these generic because some of the children routes use many-to-many relationships or are built using hierarchical tables. Hopefully, I'll get some time to work this out and update the repository when I do. Until then, oh well.
 
-### Serving A Route
+## Serving The Routes
+
+At a high level, a FastAPI application serves the routes it knows about. This application is no different, except the routes are created from a data structure instead of individually. This is handled by the `server.py` code by two functions, `app_factory` and `get_routes_config`. The first, `app_factory` creates the FastAPI `app` instance that `uvicorn` runs to get the application moving. Most of the code is focused on initializing the `fastapi_app` instance and adding some middleware to it. The last part is a loop that iterates over what's returned by `get_routes_config` and uses that to add routes to the `fastapi_app` instance using the `build_routes` function shown above.
+
+```python
+def app_factory():
+    """
+    Creates the FastAPI application object and configures
+    it for CORS
+
+    :return: FastAPI application object
+    """
+    fastapi_app: FastAPI = FastAPI(
+        title="FastAPI Presentation API",
+        description=__doc__,
+        version="1.0.0",
+        openapi_url="/openapi.json",
+        lifespan=lifespan,
+        debug=True,
+    )
+
+    # add CORS middleware
+    fastapi_app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    fastapi_app.add_middleware(BaseHTTPMiddleware, dispatch=log_middleware)
+    fastapi_app.add_middleware(MetadataMiddleware)
+
+    # add all the endpoint routes
+    for route_config in get_routes_config():
+        fastapi_app.include_router(build_routes(**route_config), prefix="/api/v1")
+
+    return fastapi_app
+
+
+def get_routes_config() -> Dict:
+    """
+    Returns all the routes configuration for the application
+
+    :return: Dict of router info
+    """
+    return [
+        {"model": artists, "child_models": [albums]},
+        {"model": albums, "child_models": [tracks]},
+        {"model": tracks, "child_models": [invoice_items, playlists]},
+        {"model": genres, "child_models": [tracks]},
+        {"model": media_types, "child_models": [tracks]},
+        {"model": playlists, "child_models": [tracks]},
+        {"model": invoices, "child_models": [invoice_items]},
+        {"model": invoice_items, "child_models": []},
+        {"model": customers, "child_models": [invoices]},
+        {"model": employees, "child_models": [customers, employees]},
+    ]
+
+
+# Initialize and create the application
+app = app_factory()
+```
+
+The `get_routes_config` returns a list of dictionaries with the keys `model` and `child_models`. The `model` value is the module's name containing the sqlmodel definitions for the database tables and the mappings applied. For example, the model `artists` refer to the `project/app/models/artists.py` Python module. The `child_models` key value is a list of models associated with the model as children. For example, the `artists` model has `[albums]` because of the one-to-many relationship between `artists` and `albums`.
+
+This lets the loop that iterates over what `get_routes_config` returns and passes that to `build_routes` to build the routes dynamically. This means that if more tables were added to the database, so long as the sqlmodel classes defined for that table followed the naming conventions used, that table could be added to the routes by including it as a data structure in `get_routes_config`.
+
+### Creating A Route
 
 Each route created by the `build_routes` function is handled by a generic function. I've included the `create_item_route` function here as an example that sets the pattern for the others:
 
@@ -347,9 +414,9 @@ def create_item_route(
             )
 ```
 
-The `create_item_route` creates the route using the `router` passed to it and defines the response it will return. The `@router.post` decorates the nested `create_item` function, which is the handler for Create activity. The parameters to this function are `data,` which is the intended model's Create class, and `db` the asynchronous database connection.
+The `create_item_route` creates the route using the `router` passed to it and defines the response it will return. The `@router.post` decorates the nested `create_item` function, the Create activity handler. The parameters to this function are `data,` which is the intended model's Create class, and `db`, the asynchronous database connection.
 
-The model Create data instance is passed to the `crud.create_item` function to create the new item and persist it to the database. The `db_item` is the item in the database that has been updated with the primary_key `id` value of the newly created item. This is returned in an instance of the `CombinedResponseCreate` class. The `CombinedResponseCreate` class, part of how meta_data is attached to the response, will be shown later in this document. 
+The model Create data instance is passed to the `crud.create_item` function to create the new item and persist it to the database. The `db_item` is the item in the database updated with the primary_key `id` value of the newly created item. This is returned in an instance of the `CombinedResponseCreate` class. The `CombinedResponseCreate` class, part of how meta_data is attached to the response, will be shown later in this document. 
 
 ### Exceptions
 
@@ -424,7 +491,45 @@ applies the `offset` and `limit` to the `playlists` collection and not the `trac
 
 ## CRUD Operations
 
+The database CRUD operations are also handled by generic functions that do the right thing based on the model they are passed. Here is the `create_item` function. The rest of the functions in the `crud.py` module follow similar pattens:
 
+```python
+async def create_item(
+    session: AsyncSession,
+    data: InputType,
+    model_class: Type[InputType],
+) -> OutputType:
+    """
+    Create a new item in the database.
+    Returns the created item as the same class.
+    """
+    if not inspect.isclass(model_class):
+        raise ValueError("model_class must be class object")
+
+    db_item = model_class(**data.model_dump())
+    session.add(db_item)
+    await session.commit()
+    await session.refresh(db_item)
+    return db_item
+```
+
+If you recall from the route function, what's passed to the crud functions is the sqlmodel table class—for example, `Artist`, not `ArtistCreate`, `ArtistRead,` or any other variations. This is because the crud functions only deal with the database items, and that's what they return, or an exception if there's a problem.
+
+If we look at this example in the case where `InputType` is `Artists`, the `data` parameter is of type `Artist`. The line of code:
+
+```python
+db_item = model_class(**data.model_dump())
+```
+
+will instantiate an `Artist` model with the data supplied. The `db_item` is added to the database `session`, committed, and refreshed to get any database-supplied information. In this case, the auto-incremented primary_key `id` value.
+
+## Separation Of Concerns
+
+The routes all return a `*Read` model or a `List[*Read]` model, for example, `AristRead` or `List[ArtistRead]`in the `CombinedResponse*` class instance. The crud functions all return database-specific models, like `Artist`. This is intentional. The routes return a presentation of the data. For this application, that presentation is JSON data. The crud functions return database model instances or collections of the same. 
+
+The crud functions make no assumptions about how the data will be used. This means other application functionality can call the crud functions and interpret and present it any way those functions see fit. My intended use case for this distinction between data and presentation is a future project/presentation about [HTMX](https://htmx.org/). The FastAPI application will be enhanced to serve HTMX endpoints, creating a SPA (Single Page Application) style of interface for the user.
+
+# MetaData
 
 # Installation
 
