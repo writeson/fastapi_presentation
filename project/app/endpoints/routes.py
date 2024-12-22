@@ -30,9 +30,21 @@ def build_routes(
     model: ModuleType,
     child_models: List[ModuleType],
 ) -> APIRouter:
+    """
+    This function builds all the CRUD routes for the passed
+    in model (artist, albums, etc.). It creates a router for
+    all the CRUD routes, and passes that and the model to
+    functions to create the different routes.
+
+    :params ModuleType: the module containing the model definitions
+    :params List[ModuleType]: the list of modules containing child model definitions
+    :returns APIRouter: a populated router FastAPI will handle
+    """
+    # takes advantage of the plural/singular naming conventions
     prefix, _, _ = get_model_names(model)
     tags = prefix.title().replace("_", " ")
 
+    # create a router for the model
     router = APIRouter(
         prefix=f"/{prefix}",
         tags=[f"{tags}"],
@@ -43,25 +55,28 @@ def build_routes(
     params = {
         "router": router,
         "model": model,
-        "child_models": child_models,
     }
     create_item_route(**params)
     get_items_route(**params)
     get_item_route(**params)
-    children.get_routes(**params)
     update_item_route(**params)
     patch_item_route(**params)
+
+    # add the child modules for the specialized children routes
+    params.update({"child_models": child_models})
+    children.get_routes(**params)
     return router
 
 
 def create_item_route(
     router: APIRouter,
     model: ModuleType,
-    child_models: List[ModuleType],
 ):
     """
-    Create the generic create item route
+    Create the generic create item route in the router parameter for
+    the model parameter
     """
+    # takes advantage of the plural/singular naming conventions
     prefix, prefix_singular, class_name = get_model_names(model)
 
     @router.post(
@@ -73,6 +88,12 @@ def create_item_route(
         data: getattr(model, f"{class_name}Create"),
         db: AsyncSession = Depends(get_db),
     ):
+        """
+        The generic create item (class_name) for the route
+
+        :params data: the Create sqlmodel definition
+        :db AsyncSession: the asynchronous database session to use
+        """
         async with db as session:
             db_item = await crud.create_item(
                 session=session,
@@ -82,7 +103,7 @@ def create_item_route(
             if db_item is None:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"{class_name} already exists",
+                    detail=f"{class_name} creation failed",
                 )
             return CombinedResponseCreate(
                 meta_data=MetaDataCreate(),
@@ -93,7 +114,6 @@ def create_item_route(
 def get_items_route(
     router: APIRouter,
     model: ModuleType,
-    child_models: List[ModuleType],
 ):
     """
     Create the generic get item route
@@ -125,7 +145,6 @@ def get_items_route(
 def get_item_route(
     router: APIRouter,
     model: ModuleType,
-    child_models: List[ModuleType],
 ):
     """
     Create the generic get item route
@@ -158,7 +177,6 @@ def get_item_route(
 def update_item_route(
     router: APIRouter,
     model: ModuleType,
-    child_models: List[ModuleType],
 ):
     prefix, prefix_singular, class_name = get_model_names(model)
 
@@ -194,7 +212,6 @@ def update_item_route(
 def patch_item_route(
     router: APIRouter,
     model: ModuleType,
-    child_models: List[ModuleType],
 ):
     prefix, prefix_singular, class_name = get_model_names(model)
 
@@ -227,12 +244,12 @@ def patch_item_route(
             )
 
 
-def get_model_names(model: ModuleType) -> Tuple[str]:
+def get_model_names(model: ModuleType) -> Tuple[str, str, str]:
     """
-    Returns the prefix, singular version of the prefix and the tags for the model
+    Returns the prefix, singular version of the prefix and the class_name for the model
 
     :params model: the model module to get the names from
-    :returns: Tuple[str] containing the prefix, singular version of the prefix and the class
+    :returns: Tuple[str, str, str] containing the prefix, singular version of the prefix and the class
     name for the model
     """
     model_name = model.__name__.split(".")[-1].lower()
