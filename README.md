@@ -1,7 +1,7 @@
 # FastAPI Presentation
 # Introduction
 
-This repository contains the FastAPI application I created for a presentation I gave at work. My goal for this repository making it a useful tool to help developers get up to speed to use the FastAPI framework to create APIs.
+This repository contains the FastAPI application I created for a presentation I gave at work. My goal for this repository is to make it a useful tool to help developers get up to speed with the FastAPI framework to create APIs.
 
 # FastAPI
 
