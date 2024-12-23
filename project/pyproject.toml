@@ -10,3 +10,8 @@ dependencies = [
     "sqlmodel>=0.0.22",
     "uvicorn>=0.32.0",
 ]
+
+[tool.uv]
+dev-dependencies = [
+    "pre-commit>=4.0.1",
+]
