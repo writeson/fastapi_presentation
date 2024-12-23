@@ -1,2 +1,2 @@
 # fastapi_presentation
-This repository is associated with the FastAPI presentation I'll be creating.
+This repository contains the FastAPI application I created for a presentation at work.
