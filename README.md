@@ -1,4 +1,7 @@
+![FastAPI Example Application title slide](docs/images/title_slide.png)
+
 # FastAPI Presentation
+
 # Introduction
 
 This repository contains the FastAPI application I created for a presentation I gave at work. My goal for this repository is to make it a useful tool to help developers get up to speed with the FastAPI framework to create APIs.
