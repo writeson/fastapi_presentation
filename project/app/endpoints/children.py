@@ -5,16 +5,16 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from project.app.database import get_db
-from project.app.models.combined import CombinedResponseReadAll
-from project.app.models.albums import Album, AlbumRead
-from project.app.models.tracks import Track, TrackRead
-from project.app.models.playlists import Playlist, PlaylistRead
-from project.app.models.invoices import Invoice, InvoiceRead
-from project.app.models.invoice_items import InvoiceItem, InvoiceItemRead
-from project.app.models.playlist_track import PlaylistTrack
-from project.app.models.customers import Customer, CustomerRead
-from project.app.models.employees import Employee, EmployeeRead
+from app.database import get_db
+from app.models.combined import CombinedResponseReadAll
+from app.models.albums import Album, AlbumRead
+from app.models.tracks import Track, TrackRead
+from app.models.playlists import Playlist, PlaylistRead
+from app.models.invoices import Invoice, InvoiceRead
+from app.models.invoice_items import InvoiceItem, InvoiceItemRead
+from app.models.playlist_track import PlaylistTrack
+from app.models.customers import Customer, CustomerRead
+from app.models.employees import Employee, EmployeeRead
 
 
 def get_routes(

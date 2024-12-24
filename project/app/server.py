@@ -25,17 +25,17 @@ from middleware import log_middleware, MetadataMiddleware
 from database import init_db
 
 # get the endpoint models to build the routes
-from project.app.models import artists
-from project.app.models import albums
-from project.app.models import tracks
-from project.app.models import genres
-from project.app.models import playlists
-from project.app.models import media_types
-from project.app.models import invoices
-from project.app.models import invoice_items
-from project.app.models import customers
-from project.app.models import employees
-from endpoints.routes import build_routes
+from app.models import artists
+from app.models import albums
+from app.models import tracks
+from app.models import genres
+from app.models import playlists
+from app.models import media_types
+from app.models import invoices
+from app.models import invoice_items
+from app.models import customers
+from app.models import employees
+from app.endpoints.routes import build_routes
 
 from logger import log_config
 

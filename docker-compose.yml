@@ -1,0 +1,17 @@
+#version: '3.9'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+#    environment:
+    # Add any environment variables your app needs here
+    # For example:
+    # APP_ENV: production
+    # DATABASE_URL: postgres://user:password@db:5432/appdb
+    volumes:
+      - .:/home/appuser/app
+    command: [".venv/bin/uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
