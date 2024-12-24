@@ -1,12 +1,19 @@
 [project]
 name = "fastapi-presentation"
 version = "0.1.0"
-description = "Add your description here"
+description = "A FastAPI example application"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = "==3.12.7"
 dependencies = [
-    "aiosqlite>=0.20.0",
-    "fastapi>=0.115.2",
-    "sqlmodel>=0.0.22",
-    "uvicorn>=0.32.0",
+    "aiosqlite==0.20.0",
+    "fastapi==0.115.2",
+    "greenlet==3.1.1",
+    "sqlmodel==0.0.22",
+    "uvicorn==0.32.0",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pip-audit==2.7.3",
+    "pre-commit==4.0.1",
 ]

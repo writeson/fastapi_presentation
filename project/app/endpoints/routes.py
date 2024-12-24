@@ -4,21 +4,21 @@ from types import ModuleType
 from fastapi import APIRouter, Depends, Path, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from project.app.database import get_db
-from project.app.endpoints import crud
-from project.app.models.metadata import (
+from app.database import get_db
+from app.endpoints import crud
+from app.models.metadata import (
     MetaDataCreate,
     MetaDataUpdate,
     MetaDataPatch,
 )
-from project.app.models.combined import (
+from app.models.combined import (
     CombinedResponseCreate,
     CombinedResponseReadAll,
     CombinedResponseRead,
     CombinedResponseUpdate,
     CombinedResponsePatch,
 )
-from project.app.endpoints import children
+from app.endpoints import children
 
 
 # Create some generic types to use in the code that follows
