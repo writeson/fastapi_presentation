@@ -1,9 +1,12 @@
 """
 Create a simple logger to use in the application.
 This will be used in a middleware layer as well
+
+This also configures uvicorn to use the same formatter for logging consistency
 """
 
 import logging
+import logging.config
 import sys
 from typing import Any, Dict
 
@@ -40,26 +43,24 @@ def setup_logging() -> Dict[str, Any]:
         uvicorn_logger.setLevel(logging.INFO)
         uvicorn_logger.propagate = False  # This prevents propagation to root logger
 
-    # Return LOGGING_CONFIG for Uvicorn
-    return {
-        "version": 1,
-        "disable_existing_loggers": False,
-        "formatters": {
-            "default": {
-                "format": "[%(asctime)s] %(levelname)s - %(message)s",
-                "datefmt": "%Y-%m-%d %H:%M:%S",
-            }
-        },
-        "handlers": {
-            "default": {
-                "formatter": "default",
-                "class": "logging.StreamHandler",
-                "stream": "ext://sys.stdout",
-            }
-        },
-        "loggers": {"": {"handlers": ["default"], "level": "INFO"}},
-    }
-
-
-# Use it in your application
-log_config = setup_logging()
+    # Configure logging to include uvicorn logs
+    logging.config.dictConfig(
+        {
+            "version": 1,
+            "disable_existing_loggers": False,
+            "formatters": {
+                "default": {
+                    "format": "[%(asctime)s] %(levelname)s - %(message)s",
+                    "datefmt": "%Y-%m-%d %H:%M:%S",
+                }
+            },
+            "handlers": {
+                "default": {
+                    "formatter": "default",
+                    "class": "logging.StreamHandler",
+                    "stream": "ext://sys.stdout",
+                }
+            },
+            "loggers": {"": {"handlers": ["default"], "level": "INFO"}},
+        }
+    )

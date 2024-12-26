@@ -48,7 +48,7 @@ async def read_items(
     Returns a list of items as the same class.
     """
     if not inspect.isclass(model_class):
-        raise ValueError("model_class must be class object")
+        raise ValueError("model_class must be a class object")
 
     query = select(model_class).offset(offset).limit(limit)
     result = await session.execute(query)
