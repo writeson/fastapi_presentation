@@ -13,5 +13,16 @@ services:
     # APP_ENV: production
     # DATABASE_URL: postgres://user:password@db:5432/appdb
     volumes:
-      - .:/home/appuser/app
-    command: [".venv/bin/uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
+      - ./project:/project
+    command: ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./project:/project
+    working_dir: /project
+    environment:
+      - PYTHONPATH=/project
+    command: ["python", "-m", "pytest", "tests/test_album_endpoint.py", "-v", "--import-mode=importlib"]
