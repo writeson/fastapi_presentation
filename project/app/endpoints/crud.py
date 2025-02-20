@@ -113,7 +113,7 @@ async def update_item(
     if db_item is None:
         return None
 
-    for key, value in data.dict(exclude_unset=True).items():
+    for key, value in data.model_dump(exclude_unset=True).items():
         setattr(db_item, key, value)
 
     session.add(db_item)
@@ -141,7 +141,7 @@ async def patch_item(
     if db_item is None:
         return None
 
-    for key, value in data.dict(exclude_unset=True).items():
+    for key, value in data.model_dump(exclude_unset=True).items():
         if value is not None:
             setattr(db_item, key, value)
 
