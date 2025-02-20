@@ -3,6 +3,7 @@ from types import ModuleType
 
 from fastapi import APIRouter, Depends, Path, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi.responses import JSONResponse
 
 from app.database import get_db
 from app.endpoints import crud
@@ -160,18 +161,19 @@ def get_item_route(
         db: AsyncSession = Depends(get_db),
     ):
         async with db as session:
-            db_item = await crud.read_item(
-                session=session,
-                id=id,
-                model_class=getattr(model, f"{class_name}"),
-            )
-            if db_item is None:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"{class_name} not found",
+            try:
+                db_item = await crud.read_item(
+                    session=session,
+                    id=id,
+                    model_class=getattr(model, f"{class_name}"),
                 )
-            item_read = getattr(model, f"{class_name}Read")
-            return CombinedResponseRead(response=item_read.model_validate(db_item))
+                item_read = getattr(model, f"{class_name}Read")
+                return CombinedResponseRead(response=item_read.model_validate(db_item))
+            except HTTPException as e:
+                return JSONResponse(
+                    status_code=e.status_code,
+                    content={"detail": e.detail}
+                )
 
 
 def update_item_route(
