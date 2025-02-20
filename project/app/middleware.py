@@ -104,53 +104,52 @@ def build_response_data(
     }
     request_url = str(request.url)
 
-    match request.method:
-        case "POST":
+    # If this is an error response, just add metadata
+    if original_response.status_code >= 400:
+        data["meta_data"] = base_meta
+        return data
+
+    # Handle different HTTP methods
+    if request.method == "POST":
+        data["meta_data"] = {
+            **base_meta,
+            "location": f"{request_url}{data['response']['id']}",
+        }
+        return data
+    elif request.method in ("PUT", "PATCH"):
+        data["meta_data"] = {
+            **base_meta,
+            "location": f"{request_url}",
+        }
+        return data
+    elif request.method == "GET" and "response" in data and isinstance(data["response"], List):
+        try:
+            query_string = request.scope.get("query_string", b"").decode()
+            query_params = parse_qs(query_string)
+            offset = int(query_params.get("offset", [0])[0])
+            limit = int(query_params.get("limit", [10])[0])
+            total_count = int(data.pop("total_count", 0))
+            page = (offset // limit) + 1
+            page_count = total_count // limit + (
+                1 if total_count % limit != 0 else 0
+            )
+            if page_count == 0:
+                collection_name = request.url.path.split("/")[-1]
+                base_meta["status_message"] = f"No {collection_name} found"
             data["meta_data"] = {
                 **base_meta,
-                "location": f"{request_url}{data['response']['id']}",
+                "offset": offset,
+                "limit": limit,
+                "page": page,
+                "page_count": page_count,
+                "total_count": total_count,
             }
             return data
-
-        case "PUT" | "PATCH":
-            data["meta_data"] = {
-                **base_meta,
-                "location": f"{request_url}",
-            }
+        except (KeyError, ValueError, TypeError):
+            data["meta_data"] = base_meta
             return data
+    elif request.method == "GET" and "response" in data and isinstance(data["response"], Dict):
+        data["meta_data"] = base_meta
+        return data
 
-        case "GET" if "response" in data and isinstance(data["response"], List):
-            try:
-                query_string = request.scope.get("query_string", b"").decode()
-                query_params = parse_qs(query_string)
-                offset = int(query_params.get("offset", [0])[0])
-                limit = int(query_params.get("limit", [10])[0])
-                total_count = int(data.pop("total_count", 0))
-                page = (offset // limit) + 1
-                page_count = total_count // limit + (
-                    1 if total_count % limit != 0 else 0
-                )
-                if page_count == 0:
-                    collection_name = request.url.path.split("/")[-1]
-                    base_meta["status_message"] = f"No {collection_name} found"
-                data["meta_data"] = {
-                    **base_meta,
-                    "offset": offset,
-                    "limit": limit,
-                    "page": page,
-                    "page_count": page_count,
-                    "total_count": total_count,
-                }
-                return data
-            except (KeyError, ValueError, TypeError):
-                data["meta_data"] = base_meta
-                return data
-
-        case "GET" if "response" in data and isinstance(data["response"], Dict):
-            data["meta_data"] = {
-                **base_meta,
-            }
-            return data
-
-        case _:
-            pass
+    return None
