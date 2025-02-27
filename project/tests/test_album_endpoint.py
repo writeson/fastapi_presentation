@@ -11,6 +11,7 @@ from app.main import app
 from app.database import get_db
 from app.models.albums import Album, AlbumCreate, AlbumRead
 from app.models.artists import Artist
+from app.models.fields import ValidationConstant
 
 # Test database URL
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -216,4 +217,84 @@ async def test_create_album_invalid_artist(async_client: AsyncClient):
     response = await async_client.post("/api/v1/albums/", json=invalid_album)
     assert response.status_code == 400
     data = response.json()
-    assert "detail" in data 
+    assert "detail" in data
+
+@pytest.mark.asyncio
+async def test_response_metadata_create(async_client: AsyncClient, test_artist_fixture: Artist):
+    """Test response metadata for create operation."""
+    response = await async_client.post("/api/v1/albums/", json=test_album)
+    
+    assert response.status_code == 201
+    data = response.json()
+    assert "meta_data" in data
+    meta_data = data["meta_data"]
+    assert meta_data["status_code"] == 201
+    assert meta_data["status_message"] == "Document created, URL follows"
+    assert "location" in meta_data
+    assert meta_data["location"].endswith(str(data["response"]["id"]))
+
+@pytest.mark.asyncio
+async def test_response_metadata_list(
+    async_client: AsyncClient,
+    async_session: AsyncSession,
+    test_artist_fixture: Artist
+):
+    """Test response metadata for list operation with pagination."""
+    # Create multiple test albums
+    for i in range(15):  # Create more than the default limit
+        album = Album(title=f"Test Album {i}", artist_id=test_artist_fixture.id)
+        async_session.add(album)
+    await async_session.commit()
+
+    response = await async_client.get("/api/v1/albums/?offset=5&limit=10")
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert "meta_data" in data
+    meta_data = data["meta_data"]
+    assert meta_data["status_code"] == 200
+    assert meta_data["offset"] == 5
+    assert meta_data["limit"] == 10
+    assert meta_data["total_count"] >= 15
+    assert "page" in meta_data
+    assert "page_count" in meta_data
+
+@pytest.mark.asyncio
+async def test_field_validation_title_length(async_client: AsyncClient, test_artist_fixture: Artist):
+    """Test string field length validation."""
+    # Create album with title exceeding max length
+    invalid_album = {
+        "title": "A" * (ValidationConstant.STRING_160.value.max + 1),
+        "artist_id": test_artist_fixture.id
+    }
+    
+    response = await async_client.post("/api/v1/albums/", json=invalid_album)
+    assert response.status_code == 422  # Validation error
+    data = response.json()
+    assert "detail" in data
+
+@pytest.mark.asyncio
+async def test_patch_optional_fields(
+    async_client: AsyncClient,
+    async_session: AsyncSession,
+    test_artist_fixture: Artist
+):
+    """Test that all fields are optional in patch operation."""
+    # Create test album first
+    album = Album(**test_album)
+    async_session.add(album)
+    await async_session.commit()
+    await async_session.refresh(album)
+
+    # Test empty patch
+    empty_patch = {}
+    response = await async_client.patch(f"/api/v1/albums/{album.id}", json=empty_patch)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["response"]["title"] == test_album["title"]
+    assert data["response"]["artist_id"] == test_album["artist_id"]
+
+    # Test null values
+    null_patch = {"title": None, "artist_id": None}
+    response = await async_client.patch(f"/api/v1/albums/{album.id}", json=null_patch)
+    assert response.status_code == 200 
