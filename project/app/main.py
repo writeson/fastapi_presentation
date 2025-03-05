@@ -20,9 +20,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from middleware import log_middleware, MetadataMiddleware
-
-from database import init_db
+from app.middleware import log_middleware, MetadataMiddleware
+from app.database import init_db
 
 # get the endpoint models to build the routes
 from app.models import artists
@@ -36,7 +35,7 @@ from app.models import invoice_items
 from app.models import customers
 from app.models import employees
 from app.endpoints.routes import build_routes
-from logger_config import setup_logging
+from app.logger_config import setup_logging
 
 
 setup_logging()

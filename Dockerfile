@@ -1,40 +1,41 @@
-# Use a Python image with uv pre-installed
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+# Use Python 3.12 base image
+FROM python:3.12-slim
 
-# Set all environment variables together to reduce layers
-ENV UV_COMPILE_BYTECODE=1 \
-    UV_LINK_MODE=copy \
-    PATH="/app/.venv/bin:$PATH" \
-    PYTHONPATH="/project/app:$PYTHONPATH" \
-    PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH="/project:$PYTHONPATH"
 
 WORKDIR /project
 
-# Create non-root user early
-USER root
+# Create non-root user
 RUN useradd -r -s /bin/false appuser && \
-    mkdir -p /project/.venv && \
+    mkdir -p /project && \
     mkdir -p /home/appuser/.cache && \
     chmod -R 777 /home/appuser/.cache && \
     chown -R appuser:appuser /project && \
     chown -R appuser:appuser /home/appuser
-    
-# Copy only the files needed for dependency installation first
-COPY --chown=appuser:appuser project/pyproject.toml project/uv.lock ./
 
-# Switch to non-root user before installing dependencies
+# Install dependencies
+RUN pip install --no-cache-dir \
+    uvicorn[standard] \
+    pytest \
+    pytest-asyncio \
+    pytest-docker \
+    httpx \
+    aiosqlite \
+    sqlmodel \
+    fastapi
+
+# Copy the project files
+COPY --chown=appuser:appuser project/ ./
+
+# Switch to non-root user
 USER appuser
 
-# Install dependencies without cache mounting
-RUN uv sync --frozen --no-dev --no-cache
-
-# Copy only the necessary application code
-COPY --chown=appuser:appuser project/app ./app
-
-# Expose the port (documentation purposes)
+# Expose the port
 EXPOSE 8000
 
-# Use exec form of CMD with specific uvicorn settings for better performance
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000", \
+# Default command
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", \
      "--workers", "4", "--loop", "uvloop", "--http", "httptools"]

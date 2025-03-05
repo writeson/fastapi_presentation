@@ -30,6 +30,19 @@ async def create_item(
     if not inspect.isclass(model_class):
         raise ValueError("model_class must be class object")
 
+    # Check if this is an Album being created
+    if model_class.__name__ == "Album":
+        # Verify artist exists
+        from app.models.artists import Artist
+        artist_query = select(Artist).where(Artist.id == data.artist_id)
+        artist_result = await session.execute(artist_query)
+        artist = artist_result.scalar_one_or_none()
+        if artist is None:
+            raise HTTPException(
+                status_code=400,
+                detail="Artist not found"
+            )
+
     db_item = model_class(**data.model_dump())
     session.add(db_item)
     await session.commit()
@@ -100,7 +113,7 @@ async def update_item(
     if db_item is None:
         return None
 
-    for key, value in data.dict(exclude_unset=True).items():
+    for key, value in data.model_dump(exclude_unset=True).items():
         setattr(db_item, key, value)
 
     session.add(db_item)
@@ -128,7 +141,7 @@ async def patch_item(
     if db_item is None:
         return None
 
-    for key, value in data.dict(exclude_unset=True).items():
+    for key, value in data.model_dump(exclude_unset=True).items():
         if value is not None:
             setattr(db_item, key, value)
 

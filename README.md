@@ -697,6 +697,79 @@ What is returned by the application routes is an instance of one of the `Combine
 
 That code has one primary function: to intercept the requests, get the response from the routes, and update the `meta_data` part of the response with the correct metadata for the type of request and the response structure.
 
+## Error Handling and Response Formatting
+
+### Response Structure
+All API responses follow a consistent format that includes metadata and the actual response data:
+
+```json
+{
+    "meta_data": {
+        "status_code": 200,
+        "status_message": "OK",
+        "location": "http://api/v1/resource/id"  // For POST/PUT/PATCH
+    },
+    "response": {
+        // Actual response data
+    }
+}
+```
+
+### Error Responses
+Error responses (4xx and 5xx) follow a similar structure:
+
+```json
+{
+    "meta_data": {
+        "status_code": 404,
+        "status_message": "Not Found"
+    },
+    "detail": "Resource not found"
+}
+```
+
+### Validation Rules
+1. Foreign Key Validation:
+   - Before creating resources with foreign key relationships, existence of the referenced resource is validated
+   - Example: Creating an album validates that the specified artist exists
+   - Returns 400 Bad Request if validation fails
+
+2. Patch Operations:
+   - All fields in PATCH requests are optional
+   - Only provided fields are updated
+   - Example: `AlbumPatch` model allows updating title or artist_id independently
+
+3. Response Formatting:
+   - Success responses include the created/updated resource
+   - Error responses include a descriptive message
+   - All responses include appropriate HTTP status codes and metadata
+
+### Common HTTP Status Codes
+- 200: Successful GET, PUT, PATCH requests
+- 201: Successful POST requests
+- 400: Bad Request (validation errors, invalid foreign keys)
+- 404: Resource Not Found
+- 422: Unprocessable Entity (invalid request data)
+
+### Best Practices
+1. Model Inheritance:
+   - Base models define common fields
+   - Create/Update models inherit from base
+   - Patch models make all fields optional
+   - Read models add required response fields
+
+2. Error Handling:
+   - Early validation of foreign key constraints
+   - Consistent error response format
+   - Descriptive error messages
+   - Proper HTTP status codes
+
+3. Response Formatting:
+   - Middleware handles response formatting
+   - Consistent metadata structure
+   - Resource locations for modifications
+   - Pagination info for collections
+
 # Installation
 
 # Running The Application

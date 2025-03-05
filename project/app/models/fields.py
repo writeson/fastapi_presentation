@@ -3,7 +3,7 @@
 from enum import Enum
 from typing import NamedTuple
 
-from sqlalchemy import Column
+from sqlalchemy import Column, String
 from sqlmodel import Field
 
 
@@ -56,5 +56,5 @@ def create_string_field(
         max_length=validation_constant.value.max,
         title=title,
         description=description,
-        sa_column=Column(mapped_name, nullable=nullable),
+        sa_column=Column(mapped_name, String(validation_constant.value.max), nullable=nullable),
     )

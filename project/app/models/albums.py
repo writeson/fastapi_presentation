@@ -77,8 +77,9 @@ class AlbumUpdate(AlbumBase):
 
 
 # Patch operation
-class AlbumPatch(AlbumBase):
+class AlbumPatch(SQLModel):
     title: Optional[str] = TitleField(default=None)
+    artist_id: Optional[int] = None
 
 
 from .artists import Artist  # noqa: E402
