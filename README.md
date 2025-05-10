@@ -4,7 +4,7 @@
 
 # Introduction
 
-This repository contains the FastAPI application I created for a presentation I gave at work. My goal for the repository is to make it a useful tool to help developers get up to speed with the FastAPI framework to create APIs.
+This repository contains the FastAPI application I created for a presentation I gave at work. My goal for this repository is to make it a useful tool to help developers get up to speed with the FastAPI framework to create APIs.
 
 # FastAPI
 
@@ -17,10 +17,10 @@ FastAPI is a modern, high-performance web framework for building APIs with Pytho
 The framework has many attractive features:
 
 1. It has very high performance, comparable to NodeJS and Go
-2. Developers will gain coding performance improvements
+2. Developers gain coding performance improvements
 3. Editors and IDEs have great support for FastAPI
 4. It's a robust platform for creating production-ready code
-5. Based on open standards for APIs, OpenAPI, also known as Swagger
+5. Based on open standards for APIs, OpenAPI, previously known as Swagger
 
 ## Who Is Using FastAPI
 
@@ -33,8 +33,8 @@ The code making up the bulk of this repository is a FastAPI web application that
 I used the Chinook SQLite database for a couple of reasons:
 
 1. I didn't have to build a database and populate it with data, which was a time-saver.
-2. Because it's an "in process" database engine, it wasn't necessary to set up and configure a database engine, like MySQL, PostgreSQL, or SQL Server.
-3. The database has tables with one-to-many, many-to-many, and self-referential hierarchical tables, which I used to display the abilities of FastAPI.
+2. Because it's an "in process" database engine, it wasn't necessary to set up and configure another database engine, like MySQL, PostgreSQL, or SQL Server.
+3. The database has tables with one-to-many, many-to-many, and self-referential hierarchical tables, which I used to display FastAPIs abilities.
 
 The ERD (Entity Relationship Diagram) of the database looks like this:
 
@@ -42,15 +42,15 @@ The ERD (Entity Relationship Diagram) of the database looks like this:
 
 ## REST Conventions
 
-REST is more of a convention than a standardized protocol, and I used the way I think about those conventions to create the REST URL endpoints.
+REST is more of a convention than a standardized protocol, and I used my conventions to create the REST URL endpoints.
 
-The endpoints define a collection of "things" and access to a single "thing" that is unique. Because they are things, nouns are used as names. I am careful when naming things to avoid awkward plural and singular nouns.
+The endpoints define a collection of "things" and access to a single "thing." Because they are things, nouns are used as names. I am careful when naming things to avoid awkward plural and singular nouns.
 
 The CRUD behaviors are mapped to these HTTP method verbs:
 
 | CRUD Method | HTTP Method | URL Endpoint        | Action on a thing                                            |
 | :---------- | ----------- | ------------------- | ------------------------------------------------------------ |
-| Create      | POST        | /api/v1/things      | Create a new thing                                           |
+| Create      | POST        | /api/v1/things      | Create new thing                                             |
 | Read        | GET         | /api/v1/things      | Read a collection of things                                  |
 | Read        | GET         | /api/v1/things/{id} | Read singular thing from the collection as a URI (Universal Resource Identifier) |
 | Update      | PUT         | /api/v1/things/{id} | Update entire thing                                          |
@@ -58,9 +58,7 @@ The CRUD behaviors are mapped to these HTTP method verbs:
 
 > [!NOTE]
 >
-> In this application, there is no Delete functionality. It's generally a bad idea to delete data from a database, unless it's archived somewhere first. I prefer to have something like an `active` flag that can be True or False to include or exclude the item from the interface. To do this would have meant modifying the Chinook database to add an `active` flag. Doing that would have made it more difficult to reset the database back to its default state, so I chose not to add delete functionality to the API.
->
-> Also, note the inclusion of the `v1` part of the path. This is a version indicator. This is useful if you later modify the REST API in a way that breaks things. The breaking changes can be created in a `v2` path. In this way existing users can continue to use the `v1` version and move to the `v2` version when they are ready.
+> In this application, there is no Delete functionality. It's generally a bad idea to delete data from a database. I prefer to have something like an `active` flag that can be True or False to include or exclude the item from the interface. To do this would have meant modifying the Chinook database to add an `active` flag. Doing that would have made it more difficult to reset the database back to its default state, so I chose not to add delete functionality to the API.
 
 ## SQLModels
 
@@ -86,9 +84,7 @@ This nicely describes the `albums` table schema and shows it contains a primary 
 This works fine, but I want to change how my application works with the table without changing the `albums` table schema.
 
 * I don't care for the naming convention used in the Chinook database for column names, and I'll map them to the naming conventions I prefer.
-* In particular, I like to use just `id` for the primary key name. The above schema creates a primary key name like this`albums.AlbumId` , which I feel is redundant. I prefer this, `albums.id`. Doing this also lets me recognize foreign keys quickly as they would be in this form for the `albums` table: `albums.artist_id`.
-
-Here is the Album model definitions:
+* In particular, I like to use just `id` for the primary key name. The above schema creates a primary key name like this`albums.AlbumId` , which I feel is redundant. I prefer this `albums.id`. Doing this also lets me recognize foreign keys quickly as they would be in this form for the `albums` table: `albums.artist_id`.
 
 ```python
 from typing import Optional, List
@@ -108,6 +104,7 @@ TitleField = partial(
     ValidationConstant.STRING_160,
 )
 
+
 class AlbumBase(SQLModel):
     """
     This is the base class for the Album model. All fields that are common to
@@ -117,6 +114,7 @@ class AlbumBase(SQLModel):
     artist_id: int = Field(
         sa_column=Column("ArtistId", Integer, ForeignKey("artists.ArtistId")),
     )
+
 
 class Album(AlbumBase, table=True):
     """
@@ -147,9 +145,11 @@ class Album(AlbumBase, table=True):
     # make the model aware of the index on the artist_id column
     __table_args__ = (Index("IFK_AlbumArtistId", "ArtistId"),)
 
+
 # Create operation
 class AlbumCreate(AlbumBase):
     pass
+
 
 # Read operation
 class AlbumRead(AlbumBase):
@@ -157,13 +157,16 @@ class AlbumRead(AlbumBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 # Update operation (Put)
 class AlbumUpdate(AlbumBase):
     pass
 
+
 # Patch operation
 class AlbumPatch(AlbumBase):
     title: Optional[str] = TitleField(default=None)
+
 
 from .artists import Artist  # noqa: E402
 from .tracks import Track  # noqa: E402
@@ -171,9 +174,9 @@ from .tracks import Track  # noqa: E402
 
 ### The Other Models
 
-Here is a list of the sqlmodels in the application:
+Here is a list of the other sqlmodels in the application:
 
-1. albums - which was covered above. This has all the albums in the database, and is related to artists
+1. albums - which was covered about. This has all the albums in the database, and is related to artists
 2. artists - This has all the artists in the database and is the parent of the albums models.
 3. customers - This has all the customers in the system and holds all the customer information; name, address, etc.. It has a parent relationship to invoices.
 4. invoices - This has the order invoices for what has been purchased and has a child relationship with customers.
@@ -237,7 +240,7 @@ def create_item_route(
             )
 ```
 
-This function initially generates the prefix, prefix_singular, and class name from the `model` parameter. The `get_model_names()` function capitalizes on the naming convention to generate these values from the `model`. The route POST operation (the CRUD creation HTTP method) decorates the nested `create_item` handler function mapped to the endpoint URL. 
+This function initially generates the prefix, prefix_singular, and class name from the `model` parameter. The `get_model_names()` function capitalizes on the naming convention to generate these values from the `model`. The route POST operation (the CRUD Creation HTTP method) decorates the nested `create_item` handler function mapped to the endpoint URL. 
 
 The remainder of the function is pretty standard asynchronous code to create an item in the database. It uses the `getattr` function to get the actual model class from the `class_name` string. It calls the `crud.create_item` method to interact with the database and persist the item to the database. The `crud.*` methods are shown later in this document.
 
@@ -338,7 +341,6 @@ def app_factory():
 
     return fastapi_app
 
-
 def get_routes_config() -> Dict:
     """
     Returns all the routes configuration for the application
@@ -365,61 +367,17 @@ app = app_factory()
 
 The `get_routes_config` returns a list of dictionaries with the keys `model` and `child_models`. The `model` value is the module's name containing the sqlmodel definitions for the database tables and the mappings applied. For example, the model `artists` refer to the `project/app/models/artists.py` Python module. The `child_models` key value is a list of models associated with the model as children. For example, the `artists` model has `[albums]` because of the one-to-many relationship between `artists` and `albums`.
 
-This lets the loop that iterates over what `get_routes_config` returns and passes that to `build_routes` to build the routes dynamically. This means that if more tables were added to the database, so long as the sqlmodel classes defined for that table followed the naming conventions used, that table could be added to the routes by including it as a data structure in `get_routes_config`.
+The loop that iterates over what `get_routes_config` returns, passes that to `build_routes` to build the routes dynamically. This means that if more tables were added to the database, so long as the sqlmodel classes defined for that table followed the naming conventions used, that table could be added to the routes by including it as a data structure in `get_routes_config`.
 
 ### Creating A Route
 
-Each route created by the `build_routes` function is handled by a generic function. I've included the `create_item_route` function here as an example that sets the pattern for the others:
-
-```python
-def create_item_route(
-    router: APIRouter,
-    model: ModuleType,
-):
-    """
-    Create the generic create item route in the router parameter for
-    the model parameter
-    """
-    # takes advantage of the plural/singular naming conventions
-    prefix, prefix_singular, class_name = get_model_names(model)
-
-    @router.post(
-        "/",
-        response_model=CombinedResponseCreate[getattr(model, f"{class_name}Read")],
-        status_code=status.HTTP_201_CREATED,
-    )
-    async def create_item(
-        data: getattr(model, f"{class_name}Create"),
-        db: AsyncSession = Depends(get_db),
-    ):
-        """
-        The generic create item (class_name) for the route
-        
-        :params data: the Create sqlmodel definition
-        :db AsyncSession: the asynchronous database session to use
-        """
-        async with db as session:
-            db_item = await crud.create_item(
-                session=session,
-                data=data,
-                model_class=getattr(model, f"{class_name}"),
-            )
-            if db_item is None:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"{class_name} creation failed",
-                )
-            return CombinedResponseCreate(
-                meta_data=MetaDataCreate(),
-                response=db_item,
-            )
-```
+Each route created by the `build_routes` function is handled by a generic function. The `create_item_route` function was shown earlier in this text.
 
 The `create_item_route` creates the route using the `router` passed to it and defines the response it will return. The `@router.post` decorates the nested `create_item` function, the Create activity handler function. The parameters to this function are `data,` which is the intended model's Create class, and `db`, the asynchronous database connection.
 
 The model Create data instance is passed to the `crud.create_item` function to create the new item and persist it to the database. The `db_item` is the item in the database updated with the primary_key `id` value of the newly created item. This is returned in an instance of the `CombinedResponseCreate` class. The `CombinedResponseCreate` class, part of how meta_data is attached to the response, will be shown later in this document. 
 
-### Exceptions
+### Exception Cases
 
 As mentioned, I haven't yet figured out how to make the children routes generic. For those routes, I created individual routes that also included interaction with the database to save some time. For example, I'll show the track to playlist handler, which uses the many-to-many relationship between tracks and playlists.
 
@@ -558,7 +516,7 @@ One minor one is creating a new thing. When a new thing is created, the response
 
 I think a bigger problem is handling collections of things. An API endpoint like this: `api/v1/things` returns a collection. In any reasonably sized database, the collection of "things" could be pretty large. This example application handles that by providing `offset` and `limit` query string parameters with default values of 0 and 10, respectively. The response from the endpoint is a list of things constrained by the `offset` and `limit` values. However, it doesn't tell you anything about the total size of the collection or how to paginate it in a presentation.
 
-This is an opportunity to include metadata about the data in the API response. The metadata about a response would vary depending on the response. For example, a create thing response metadata would include location information about the newly created thing's API URL. A collection of things response metadata would consist of pagination information about the collection: current page number, the total number of pages based on the `offset` and `limit`, and the total number of things in the collection.
+This is an opportunity to include metadata about the data in the API response. The metadata about a response would vary depending on the response. For example, the create thing response metadata would include location information about the newly created thing's API URL. The collection of things response metadata would consist of pagination information about the collection: current page number, the total number of pages based on the `offset` and `limit`, and the total number of things in the collection.
 
 This is where the `MetaData*` and  `Combined*` class models, as well as custom middleware, come into play in the example application.
 
@@ -694,88 +652,34 @@ What is returned by the application routes is an instance of one of the `Combine
 
 That code has one primary function: to intercept the requests, get the response from the routes, and update the `meta_data` part of the response with the correct metadata for the type of request and the response structure.
 
-## Error Handling and Response Formatting
-
-### Response Structure
-All API responses follow a consistent format that includes metadata and the actual response data:
-
-```json
-{
-    "meta_data": {
-        "status_code": 200,
-        "status_message": "OK",
-        "location": "http://api/v1/resource/id"  // For POST/PUT/PATCH
-    },
-    "response": {
-        // Actual response data
-    }
-}
-```
-
-### Error Responses
-Error responses (4xx and 5xx) follow a similar structure:
-
-```json
-{
-    "meta_data": {
-        "status_code": 404,
-        "status_message": "Not Found"
-    },
-    "detail": "Resource not found"
-}
-```
-
-### Validation Rules
-1. Foreign Key Validation:
-   - Before creating resources with foreign key relationships, existence of the referenced resource is validated
-   - Example: Creating an album validates that the specified artist exists
-   - Returns 400 Bad Request if validation fails
-
-2. Patch Operations:
-   - All fields in PATCH requests are optional
-   - Only provided fields are updated
-   - Example: `AlbumPatch` model allows updating title or artist_id independently
-
-3. Response Formatting:
-   - Success responses include the created/updated resource
-   - Error responses include a descriptive message
-   - All responses include appropriate HTTP status codes and metadata
-
-### Common HTTP Status Codes
-- 200: Successful GET, PUT, PATCH requests
-- 201: Successful POST requests
-- 400: Bad Request (validation errors, invalid foreign keys)
-- 404: Resource Not Found
-- 422: Unprocessable Entity (invalid request data)
-
-### Best Practices
-1. Model Inheritance:
-   - Base models define common fields
-   - Create/Update models inherit from base
-   - Patch models make all fields optional
-   - Read models add required response fields
-
-2. Error Handling:
-   - Early validation of foreign key constraints
-   - Consistent error response format
-   - Descriptive error messages
-   - Proper HTTP status codes
-
-3. Response Formatting:
-   - Middleware handles response formatting
-   - Consistent metadata structure
-   - Resource locations for modifications
-   - Pagination info for collections
-
 # Installation
 
+The project uses the Astral uv tool for dependency management. Install the uv tool according to its documentation. Once the repository has been cloned, change to the project directory and run:
+```console
+uv sync
+```
+
+That will install the dependencies to run the application locally. 
+
 # Running The Application
+
+The easiest way to run the application is to use Docker. Once Docker is installed, change to the project directory and run this command:
+
+```console
+docker compose -f docker-compose.yml up
+```
+
+This will create a container and run the application in terminal mode so the log messages are visible in the terminal window where the command was run. Open a browser and navigate to `http://0.0.0.0:8000/docs` and you'll see the OpenAPI (Swagger) documentation for the application REST endpoints.
+
+You can interact with the endpoints to see how the application performs.
 
 # Resources
 
 [FastAPI Documentation](https://fastapi.tiangolo.com/)
 
 [SQLite Tutorial](https://www.sqlitetutorial.net/)
+
+[uv](https://docs.astral.sh/uv/)
 
 This is a [YouTube](https://www.youtube.com/watch?v=pkILKAHScrc) video of a presentation I gave to a Python Users group about asynchronous coding. The first half is that presentation.
 
