@@ -681,7 +681,7 @@ You can interact with the endpoints to see how the application performs.
 
 [uv](https://docs.astral.sh/uv/)
 
-This is a [YouTube](https://www.youtube.com/watch?v=pkILKAHScrc) video of a presentation I gave to a Python Users group about asynchronous coding. The first half is that presentation.
+
 
 
 
