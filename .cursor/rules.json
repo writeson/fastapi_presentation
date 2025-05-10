@@ -1,0 +1,112 @@
+{
+    "projectRules": {
+        "fastapi": {
+            "enabled": true,
+            "rules": [
+                {
+                    "name": "Use type hints",
+                    "description": "All function parameters and return types should have explicit type hints",
+                    "pattern": "def\\s+\\w+\\s*\\([^\\)]*\\)\\s*(?!\\s*->)",
+                    "severity": "warning"
+                },
+                {
+                    "name": "Use Pydantic for request validation",
+                    "description": "Request bodies should be validated using Pydantic models",
+                    "pattern": "@app\\.(?:post|put|patch).*\\n.*def\\s+\\w+\\s*\\([^\\)]*\\)\\s*(?!.*:\\s*BaseModel)",
+                    "severity": "warning"
+                },
+                {
+                    "name": "Async function for endpoints",
+                    "description": "API endpoints should be async functions",
+                    "pattern": "@app\\.(?:get|post|put|patch|delete).*\\n.*def\\s+\\w+\\s*\\(",
+                    "negativePattern": "@app\\.(?:get|post|put|patch|delete).*\\n.*async\\s+def",
+                    "severity": "warning"
+                },
+                {
+                    "name": "Include correlation ID in logs",
+                    "description": "Log statements should include correlation_id for traceability",
+                    "pattern": "logger\\.\\w+\\([^\\)]*\\)",
+                    "negativePattern": "logger\\.\\w+\\([^\\)]*correlation_id[^\\)]*\\)",
+                    "severity": "info"
+                },
+                {
+                    "name": "Proper error handling",
+                    "description": "Use FastAPIHTTPException for expected errors with status codes",
+                    "pattern": "raise\\s+Exception",
+                    "negativePattern": "raise\\s+FastAPIHTTPException",
+                    "severity": "warning"
+                },
+                {
+                    "name": "Use dependency injection",
+                    "description": "Use FastAPI's Depends for dependency injection",
+                    "pattern": "def\\s+\\w+\\s*\\([^\\)]*request[^\\)]*\\)",
+                    "negativePattern": "def\\s+\\w+\\s*\\([^\\)]*Depends[^\\)]*\\)",
+                    "severity": "info"
+                }
+            ]
+        },
+        "pytest": {
+            "enabled": true,
+            "rules": [
+                {
+                    "name": "Use pytest fixtures",
+                    "description": "Use pytest fixtures instead of setUp methods",
+                    "pattern": "def\\s+setUp\\s*\\(",
+                    "severity": "warning"
+                },
+                {
+                    "name": "Use pytest.mark decorators",
+                    "description": "Use pytest.mark decorators for test categorization",
+                    "pattern": "class\\s+Test\\w+\\s*\\(",
+                    "negativePattern": "@pytest\\.mark\\.",
+                    "severity": "info"
+                },
+                {
+                    "name": "Use pytest parametrize",
+                    "description": "Use pytest.mark.parametrize for similar test cases",
+                    "pattern": "def\\s+test_\\w+\\s*\\([^\\)]*\\)\\s*:\\s*\\n\\s*\\s*\\s*\\s*\\w+\\s*=\\s*\\[",
+                    "negativePattern": "@pytest\\.mark\\.parametrize",
+                    "severity": "info"
+                },
+                {
+                    "name": "Test function naming",
+                    "description": "Test functions should be named test_*",
+                    "pattern": "def\\s+(?!test_)\\w+\\s*\\([^\\)]*\\)\\s*:\\s*\\n\\s*\\s*\\s*\\s*assert",
+                    "severity": "warning"
+                },
+                {
+                    "name": "Use pytest raises",
+                    "description": "Use pytest.raises for testing exceptions",
+                    "pattern": "try:\\s*\\n\\s*\\s*\\s*\\s*\\w+\\s*\\([^\\)]*\\)\\s*\\n\\s*except\\s+\\w+\\s*:",
+                    "negativePattern": "pytest\\.raises",
+                    "severity": "warning"
+                },
+                {
+                    "name": "Use pytest async",
+                    "description": "Use pytest.mark.asyncio for async tests",
+                    "pattern": "async\\s+def\\s+test_\\w+\\s*\\(",
+                    "negativePattern": "@pytest\\.mark\\.asyncio",
+                    "severity": "warning"
+                }
+            ]
+        }
+    },
+    "formatOnSave": true,
+    "formatOnPaste": true,
+    "linting": {
+        "enabled": true,
+        "pylint": {
+            "enabled": true
+        },
+        "mypy": {
+            "enabled": true
+        }
+    },
+    "editor": {
+        "insertFinalNewline": true,
+        "tabSize": 4,
+        "rulers": [
+            88
+        ]
+    }
+}
