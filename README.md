@@ -4,7 +4,7 @@
 
 # Introduction
 
-This repository contains the FastAPI application I created for a presentation I gave at work. My goal for this repository is to make it a useful tool to help developers get up to speed with the FastAPI framework to create APIs.
+This repository contains the FastAPI application I created for a presentation I gave at work. My goal for the repository is to make it a useful tool to help developers get up to speed with the FastAPI framework to create APIs.
 
 # FastAPI
 
@@ -17,10 +17,10 @@ FastAPI is a modern, high-performance web framework for building APIs with Pytho
 The framework has many attractive features:
 
 1. It has very high performance, comparable to NodeJS and Go
-2. Developers gain coding performance improvements
+2. Developers will gain coding performance improvements
 3. Editors and IDEs have great support for FastAPI
 4. It's a robust platform for creating production-ready code
-5. Based on open standards for APIs, OpenAPI, previously known as Swagger
+5. Based on open standards for APIs, OpenAPI, also known as Swagger
 
 ## Who Is Using FastAPI
 
@@ -33,8 +33,8 @@ The code making up the bulk of this repository is a FastAPI web application that
 I used the Chinook SQLite database for a couple of reasons:
 
 1. I didn't have to build a database and populate it with data, which was a time-saver.
-2. Because it's an "in process" database engine, it wasn't necessary to set up and configure another database engine, like MySQL, PostgreSQL, or SQL Server.
-3. The database has tables with one-to-many, many-to-many, and self-referential hierarchical tables, which I used to display FastAPIs abilities.
+2. Because it's an "in process" database engine, it wasn't necessary to set up and configure a database engine, like MySQL, PostgreSQL, or SQL Server.
+3. The database has tables with one-to-many, many-to-many, and self-referential hierarchical tables, which I used to display the abilities of FastAPI.
 
 The ERD (Entity Relationship Diagram) of the database looks like this:
 
@@ -42,15 +42,15 @@ The ERD (Entity Relationship Diagram) of the database looks like this:
 
 ## REST Conventions
 
-REST is more of a convention than a standardized protocol, and I used my conventions to create the REST URL endpoints.
+REST is more of a convention than a standardized protocol, and I used the way I think about those conventions to create the REST URL endpoints.
 
-The endpoints define a collection of "things" and access to a single "thing." Because they are things, nouns are used as names. I am careful when naming things to avoid awkward plural and singular nouns.
+The endpoints define a collection of "things" and access to a single "thing" that is unique. Because they are things, nouns are used as names. I am careful when naming things to avoid awkward plural and singular nouns.
 
 The CRUD behaviors are mapped to these HTTP method verbs:
 
 | CRUD Method | HTTP Method | URL Endpoint        | Action on a thing                                            |
 | :---------- | ----------- | ------------------- | ------------------------------------------------------------ |
-| Create      | POST        | /api/v1/things      | Create new thing                                             |
+| Create      | POST        | /api/v1/things      | Create a new thing                                           |
 | Read        | GET         | /api/v1/things      | Read a collection of things                                  |
 | Read        | GET         | /api/v1/things/{id} | Read singular thing from the collection as a URI (Universal Resource Identifier) |
 | Update      | PUT         | /api/v1/things/{id} | Update entire thing                                          |
@@ -58,7 +58,9 @@ The CRUD behaviors are mapped to these HTTP method verbs:
 
 > [!NOTE]
 >
-> In this application, there is no Delete functionality. It's generally a bad idea to delete data from a database. I prefer to have something like an `active` flag that can be True or False to include or exclude the item from the interface. To do this would have meant modifying the Chinook database to add an `active` flag. Doing that would have made it more difficult to reset the database back to its default state, so I chose not to add delete functionality to the API.
+> In this application, there is no Delete functionality. It's generally a bad idea to delete data from a database, unless it's archived somewhere first. I prefer to have something like an `active` flag that can be True or False to include or exclude the item from the interface. To do this would have meant modifying the Chinook database to add an `active` flag. Doing that would have made it more difficult to reset the database back to its default state, so I chose not to add delete functionality to the API.
+>
+> Also, note the inclusion of the `v1` part of the path. This is a version indicator. This is useful if you later modify the REST API in a way that breaks things. The breaking changes can be created in a `v2` path. In this way existing users can continue to use the `v1` version and move to the `v2` version when they are ready.
 
 ## SQLModels
 
@@ -84,7 +86,9 @@ This nicely describes the `albums` table schema and shows it contains a primary 
 This works fine, but I want to change how my application works with the table without changing the `albums` table schema.
 
 * I don't care for the naming convention used in the Chinook database for column names, and I'll map them to the naming conventions I prefer.
-* In particular, I like to use just `id` for the primary key name. The above schema creates a primary key name like this`albums.AlbumId` , which I feel is redundant. I prefer this `albums.id`. Doing this also lets me recognize foreign keys quickly as they would be in this form for the `albums` table: `albums.artist_id`.
+* In particular, I like to use just `id` for the primary key name. The above schema creates a primary key name like this`albums.AlbumId` , which I feel is redundant. I prefer this, `albums.id`. Doing this also lets me recognize foreign keys quickly as they would be in this form for the `albums` table: `albums.artist_id`.
+
+Here is the Album model definitions:
 
 ```python
 from typing import Optional, List
@@ -104,7 +108,6 @@ TitleField = partial(
     ValidationConstant.STRING_160,
 )
 
-
 class AlbumBase(SQLModel):
     """
     This is the base class for the Album model. All fields that are common to
@@ -114,7 +117,6 @@ class AlbumBase(SQLModel):
     artist_id: int = Field(
         sa_column=Column("ArtistId", Integer, ForeignKey("artists.ArtistId")),
     )
-
 
 class Album(AlbumBase, table=True):
     """
@@ -145,11 +147,9 @@ class Album(AlbumBase, table=True):
     # make the model aware of the index on the artist_id column
     __table_args__ = (Index("IFK_AlbumArtistId", "ArtistId"),)
 
-
 # Create operation
 class AlbumCreate(AlbumBase):
     pass
-
 
 # Read operation
 class AlbumRead(AlbumBase):
@@ -157,16 +157,13 @@ class AlbumRead(AlbumBase):
 
     model_config = ConfigDict(from_attributes=True)
 
-
 # Update operation (Put)
 class AlbumUpdate(AlbumBase):
     pass
 
-
 # Patch operation
 class AlbumPatch(AlbumBase):
     title: Optional[str] = TitleField(default=None)
-
 
 from .artists import Artist  # noqa: E402
 from .tracks import Track  # noqa: E402
@@ -174,9 +171,9 @@ from .tracks import Track  # noqa: E402
 
 ### The Other Models
 
-Here is a list of the other sqlmodels in the application:
+Here is a list of the sqlmodels in the application:
 
-1. albums - which was covered about. This has all the albums in the database, and is related to artists
+1. albums - which was covered above. This has all the albums in the database, and is related to artists
 2. artists - This has all the artists in the database and is the parent of the albums models.
 3. customers - This has all the customers in the system and holds all the customer information; name, address, etc.. It has a parent relationship to invoices.
 4. invoices - This has the order invoices for what has been purchased and has a child relationship with customers.
@@ -240,7 +237,7 @@ def create_item_route(
             )
 ```
 
-This function initially generates the prefix, prefix_singular, and class name from the `model` parameter. The `get_model_names()` function capitalizes on the naming convention to generate these values from the `model`. The route POST operation (the CRUD Creation HTTP method) decorates the nested `create_item` handler function mapped to the endpoint URL. 
+This function initially generates the prefix, prefix_singular, and class name from the `model` parameter. The `get_model_names()` function capitalizes on the naming convention to generate these values from the `model`. The route POST operation (the CRUD creation HTTP method) decorates the nested `create_item` handler function mapped to the endpoint URL. 
 
 The remainder of the function is pretty standard asynchronous code to create an item in the database. It uses the `getattr` function to get the actual model class from the `class_name` string. It calls the `crud.create_item` method to interact with the database and persist the item to the database. The `crud.*` methods are shown later in this document.
 

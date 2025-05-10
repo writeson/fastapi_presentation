@@ -19,9 +19,6 @@ RUN useradd -r -s /bin/false appuser && \
 # Install dependencies
 RUN pip install --no-cache-dir \
     uvicorn[standard] \
-    pytest \
-    pytest-asyncio \
-    pytest-docker \
     httpx \
     aiosqlite \
     sqlmodel \
